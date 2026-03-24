@@ -1,4 +1,4 @@
-import { Wallet, WalletRestAPI } from '@binance/wallet';
+import { Wallet } from '@binance/wallet';
 
 const configurationRestAPI = {
     apiKey: process.env.BINANCE_API_KEY as string,

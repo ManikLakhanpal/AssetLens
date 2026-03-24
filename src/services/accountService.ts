@@ -1,36 +1,18 @@
-import axios from "axios";
-import crypto from "crypto";
+import walletClient from "./binance/wallet";
 
-import AccountModel from "../models/accountModel";
-
-const BINANCE_API_KEY = process.env.BINANCE_API_KEY;
-const BINANCE_API_SECRET = process.env.BINANCE_API_SECRET;
-const BINANCE_FUNDING_ASSET_URL =
-  "https://api.binance.com/sapi/v1/asset/get-funding-asset";
-
-export async function getAccountInfo(): Promise<unknown> {
-  if (!BINANCE_API_KEY || !BINANCE_API_SECRET) {
-    throw new Error("Missing BINANCE_API_KEY or BINANCE_API_SECRET in environment variables");
-  }
-
-  const timestamp = Date.now();
-  const queryString = AccountModel.buildFundingAssetRequestParams(timestamp);
-  const signature = crypto
-    .createHmac("sha256", BINANCE_API_SECRET)
-    .update(queryString)
-    .digest("hex");
-
-  const url = `${BINANCE_FUNDING_ASSET_URL}?${queryString}&signature=${signature}`;
-
+// * Funding Wallet Information
+export async function fundingWalletInfo() {
   try {
-    const response = await axios.post(url, {}, {
-      headers: {
-        "X-MBX-APIKEY": BINANCE_API_KEY,
-      },
-    });
+    const response = await walletClient.restAPI.fundingWallet();
 
-    return AccountModel.toApiResponse(response.data);
-  } catch (error: unknown) {
+    const rateLimits = response.rateLimits!;
+    console.log("fundingWallet() rate limits:", rateLimits);
+
+    const data = await response.data();
+    console.log("fundingWallet() response:", data);
+
+    return data;
+  } catch (error) {
     const err = error as {
       response?: { data?: { msg?: string } };
       message?: string;
