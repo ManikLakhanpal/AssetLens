@@ -1,9 +1,13 @@
 import { Router } from "express";
+import { 
+    fetchFundingWalletBalance, 
+    fetchAccountInformation 
+} from "../controllers/accountController";
 
-import { fetchAccountData } from "../controllers/accountController";
 
 const router = Router();
 
-router.get("/get-data", fetchAccountData);
+router.get("/get-data", fetchFundingWalletBalance);
+router.get("/account-info", fetchAccountInformation);
 
 export default router;
