@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import accountRoutes from "./routes/accountRoutes";
+import zerodhaRoutes from "./routes/zerodhaRoutes";
 
 const PORT = process.env.PORT;
 
@@ -12,6 +13,7 @@ app.use(cors());
 
 // * Routes
 app.use(accountRoutes);
+app.use(zerodhaRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ message: 'OK' });
