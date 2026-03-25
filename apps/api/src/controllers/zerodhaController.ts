@@ -1,5 +1,9 @@
 import type { Request, Response } from "express";
-import { getZerodhaProfile, getZerodhaHoldings, generateAccessToken } from "../services/zerodhaService";
+import { 
+  getZerodhaProfile, 
+  getZerodhaHoldings, 
+  generateAccessToken 
+} from "../services/zerodhaService";
 
 export async function fetchZerodhaProfile(_req: Request, res: Response): Promise<void> {
   try {
