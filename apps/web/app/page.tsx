@@ -6,6 +6,7 @@ import SpotAccount from "./components/SpotAccount";
 import FundingWallet from "./components/FundingWallet";
 import ZerodhaProfile from "./components/ZerodhaProfile";
 import ZerodhaHoldings from "./components/ZerodhaHoldings";
+import PortfolioPieChart from "./components/PortfolioPieChart";
 
 type Filter = "all" | "binance" | "zerodha";
 
@@ -23,11 +24,10 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-[#050511] text-slate-900 dark:text-zinc-100 selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-200">
-      {/* Background Gradients — only visible in dark mode */}
+      {/* Background Gradients — dark mode only */}
       <div className="hidden dark:block absolute top-[-20%] left-[-10%] w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-80 blur-[80px] pointer-events-none" />
       <div className="hidden dark:block absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-teal-900/10 via-transparent to-transparent opacity-70 blur-[80px] pointer-events-none" />
       <div className="hidden dark:block absolute top-[50%] left-[60%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-orange-900/10 via-transparent to-transparent opacity-60 blur-[100px] pointer-events-none" />
-
       {/* Light mode gradient */}
       <div className="block dark:hidden absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-slate-50 to-transparent pointer-events-none" />
 
@@ -50,6 +50,9 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        {/* Portfolio Pie Chart — full width */}
+        <PortfolioPieChart />
 
         {/* Binance Section */}
         {showBinance && (
