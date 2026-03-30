@@ -10,6 +10,7 @@ import {
 } from "recharts";
 
 import { api, routes } from "../lib/api";
+import { isZerodhaMFHolding, type ZerodhaMFHolding } from "../lib/zerodha";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -91,22 +92,47 @@ export default function PortfolioPieChart() {
 
   const [summaryData, setSummaryData] = useState<PortfolioSummary | null>(null);
   const [assetData, setAssetData] = useState<AssetData | null>(null);
+  const [mfValueInr, setMfValueInr] = useState<number>(0);
+  const [mfAssetSlices, setMfAssetSlices] = useState<AssetSlice[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const [summaryRes, assetsRes] = await settlePair(
-        api.get(routes.portfolio.summary),
-        api.get(routes.portfolio.assets)
-      );
+      const [summaryRes, assetsRes, mfRes] = await Promise.all([
+        settle(api.get(routes.portfolio.summary)),
+        settle(api.get(routes.portfolio.assets)),
+        settle(api.get(routes.zerodha.mfHoldings)),
+      ]);
 
       if (summaryRes.status === "fulfilled") setSummaryData(summaryRes.value.data);
       if (assetsRes.status === "fulfilled") setAssetData(assetsRes.value.data);
       if (summaryRes.status === "rejected" && assetsRes.status === "rejected") {
         setErrorMsg("Failed to fetch portfolio data");
       }
+
+      if (mfRes.status === "fulfilled" && Array.isArray(mfRes.value.data)) {
+        const mfHoldings = mfRes.value.data.filter(isZerodhaMFHolding) as ZerodhaMFHolding[];
+        const slices = mfHoldings
+          .map((mf) => {
+            const value = mf.quantity * mf.last_price;
+            return {
+              name: mf.fund,
+              value,
+              exchange: "Zerodha" as const,
+            };
+          })
+          .filter((s) => s.value > 10);
+
+        const total = slices.reduce((sum, s) => sum + s.value, 0);
+        setMfAssetSlices(slices);
+        setMfValueInr(total);
+      } else {
+        setMfAssetSlices([]);
+        setMfValueInr(0);
+      }
+
       setLoading(false);
     };
 
@@ -114,19 +140,27 @@ export default function PortfolioPieChart() {
   }, []);
 
   // Build chart data based on view
-  const exchangeChartData = summaryData && summaryData.total_inr > 0
+  const exchangeChartData =
+    summaryData && summaryData.total_inr + mfValueInr > 0
     ? [
         { name: "Binance", value: summaryData.binance_inr, exchange: "" },
-        { name: "Zerodha", value: summaryData.zerodha_inr, exchange: "" },
+        {
+          name: "Zerodha",
+          value: summaryData.zerodha_inr + mfValueInr,
+          exchange: "",
+        },
       ]
     : [];
 
-  const assetChartData = assetData?.assets ?? [];
+  const assetChartData = [
+    ...(assetData?.assets ?? []),
+    ...mfAssetSlices,
+  ];
 
   const chartData = viewMode === "exchange" ? exchangeChartData : assetChartData;
   const total = viewMode === "exchange"
-    ? (summaryData?.total_inr ?? 0)
-    : (assetData?.total_inr ?? 0);
+    ? (summaryData?.total_inr ?? 0) + mfValueInr
+    : (assetData?.total_inr ?? 0) + mfValueInr;
 
   // Legend items (top 10 shown in list)
   const legendItems = viewMode === "exchange"

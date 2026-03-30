@@ -30,6 +30,21 @@ export interface ZerodhaHolding {
   day_change_percentage: number;
 }
 
+export interface ZerodhaMFHolding {
+  tradingsymbol: string;
+  fund: string;
+  folio: string;
+  last_price: number;
+  last_price_date?: string;
+  quantity: number;
+  pnl: number;
+  xirr: number;
+  average_price: number;
+  discrepancy: boolean;
+  pledged_quantity: number;
+  las_quantity: number;
+}
+
 type UnknownRecord = Record<string, unknown>;
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -72,6 +87,23 @@ export function isZerodhaHolding(value: unknown): value is ZerodhaHolding {
     typeof value.pnl === "number" &&
     typeof value.day_change === "number" &&
     typeof value.day_change_percentage === "number"
+  );
+}
+
+export function isZerodhaMFHolding(value: unknown): value is ZerodhaMFHolding {
+  return (
+    isRecord(value) &&
+    typeof value.tradingsymbol === "string" &&
+    typeof value.fund === "string" &&
+    typeof value.folio === "string" &&
+    typeof value.last_price === "number" &&
+    typeof value.quantity === "number" &&
+    typeof value.pnl === "number" &&
+    typeof value.xirr === "number" &&
+    typeof value.average_price === "number" &&
+    typeof value.discrepancy === "boolean" &&
+    typeof value.pledged_quantity === "number" &&
+    typeof value.las_quantity === "number"
   );
 }
 

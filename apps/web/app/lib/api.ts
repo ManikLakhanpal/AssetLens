@@ -17,6 +17,7 @@ export const routes = {
   zerodha: {
     profile: "/zerodha/profile",
     holdings: "/zerodha/holdings",
+    mfHoldings: "/zerodha/mf-holdings",
     generateToken: "/zerodha/generate-token",
   },
   portfolio: {

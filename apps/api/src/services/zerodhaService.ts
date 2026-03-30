@@ -127,3 +127,19 @@ export async function getZerodhaHoldings() {
     return serviceError;
   }
 }
+
+
+export async function getZerodhaMFHoldings() {
+  try {
+    const holdings = await kiteClient.getMFHoldings();
+    return holdings;
+  } catch (error) {
+    const serviceError = buildZerodhaServiceError(
+      error,
+      "Failed to fetch Zerodha holdings"
+    );
+    console.error("getZerodhaHoldings error:", serviceError.message);
+
+    return serviceError;
+  }
+}
