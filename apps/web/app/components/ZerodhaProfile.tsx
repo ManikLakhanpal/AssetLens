@@ -2,30 +2,53 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
-interface ZerodhaProfile {
-  user_id: string;
-  user_name: string;
-  email: string;
-  user_type: string;
-  broker: string;
-  exchanges: string[];
-  products: string[];
-  order_types: string[];
-}
+import ZerodhaLoginPrompt from "./ZerodhaLoginPrompt";
+import {
+  extractZerodhaApiError,
+  isZerodhaApiError,
+  isZerodhaProfileResponse,
+  type ZerodhaProfileResponse,
+} from "../lib/zerodha";
 
 export default function ZerodhaProfile() {
-  const [profile, setProfile] = useState<ZerodhaProfile | null>(null);
+  const [profile, setProfile] = useState<ZerodhaProfileResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loginUrl, setLoginUrl] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("http://localhost:4000/zerodha/profile");
+
+        if (isZerodhaApiError(response.data)) {
+          setErrorMsg(response.data.message);
+          setLoginUrl(response.data.login_url ?? null);
+          setAuthRequired(response.data.code === "AUTH_REQUIRED");
+          return;
+        }
+
+        if (!isZerodhaProfileResponse(response.data)) {
+          setErrorMsg("Received an invalid Zerodha profile response.");
+          setAuthRequired(false);
+          return;
+        }
+
         setProfile(response.data);
-      } catch (err: any) {
-        setErrorMsg(err?.response?.data?.error || "Failed to fetch Zerodha profile");
+        setAuthRequired(false);
+      } catch (error: unknown) {
+        const zerodhaError = extractZerodhaApiError(error);
+
+        if (zerodhaError) {
+          setErrorMsg(zerodhaError.message);
+          setLoginUrl(zerodhaError.login_url ?? null);
+          setAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
+          return;
+        }
+
+        setErrorMsg("Failed to fetch Zerodha profile");
+        setAuthRequired(false);
       } finally {
         setLoading(false);
       }
@@ -52,7 +75,14 @@ export default function ZerodhaProfile() {
           <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : errorMsg ? (
-        <div className="text-red-500 dark:text-red-400 text-sm">{errorMsg}</div>
+        loginUrl || authRequired ? (
+          <ZerodhaLoginPrompt
+            message={errorMsg}
+            loginUrl={loginUrl ?? undefined}
+          />
+        ) : (
+          <div className="text-red-500 dark:text-red-400 text-sm">{errorMsg}</div>
+        )
       ) : profile ? (
         <div className="flex flex-col gap-4">
           {/* Avatar + Name */}

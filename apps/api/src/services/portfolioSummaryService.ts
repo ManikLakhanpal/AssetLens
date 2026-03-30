@@ -27,8 +27,9 @@ export async function getPortfolioSummary(): Promise<PortfolioSummary> {
     binanceData.status === "fulfilled" ? binanceData.value.total_inr : 0;
 
   const zerodha_inr =
-    zerodhaHoldings.status === "fulfilled"
-      ? (zerodhaHoldings.value as Array<{ quantity: number; last_price: number }>).reduce(
+    zerodhaHoldings.status === "fulfilled" &&
+    Array.isArray(zerodhaHoldings.value)
+      ? zerodhaHoldings.value.reduce(
           (sum, h) => sum + h.quantity * h.last_price,
           0
         )
@@ -64,15 +65,18 @@ export async function getPortfolioAssets(): Promise<{
     }
   }
 
-  if (zerodhaHoldings.status === "fulfilled") {
-    for (const h of zerodhaHoldings.value as Array<{
-      tradingsymbol: string;
-      quantity: number;
-      last_price: number;
-    }>) {
+  if (
+    zerodhaHoldings.status === "fulfilled" &&
+    Array.isArray(zerodhaHoldings.value)
+  ) {
+    for (const h of zerodhaHoldings.value) {
       const value = h.quantity * h.last_price;
       if (value > 10) {
-        slices.push({ name: h.tradingsymbol, value, exchange: "Zerodha" });
+        slices.push({
+          name: h.tradingsymbol,
+          value,
+          exchange: "Zerodha",
+        });
       }
     }
   }

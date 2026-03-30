@@ -2,31 +2,53 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
-interface Holding {
-  tradingsymbol: string;
-  exchange: string;
-  isin: string;
-  quantity: number;
-  average_price: number;
-  last_price: number;
-  pnl: number;
-  day_change: number;
-  day_change_percentage: number;
-}
+import ZerodhaLoginPrompt from "./ZerodhaLoginPrompt";
+import {
+  extractZerodhaApiError,
+  isZerodhaApiError,
+  isZerodhaHolding,
+  type ZerodhaHolding,
+} from "../lib/zerodha";
 
 export default function ZerodhaHoldings() {
-  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [holdings, setHoldings] = useState<ZerodhaHolding[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loginUrl, setLoginUrl] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("http://localhost:4000/zerodha/holdings");
-        setHoldings(Array.isArray(response.data) ? response.data : []);
-      } catch (err: any) {
-        setErrorMsg(err?.response?.data?.error || "Failed to fetch Zerodha holdings");
+
+        if (isZerodhaApiError(response.data)) {
+          setErrorMsg(response.data.message);
+          setLoginUrl(response.data.login_url ?? null);
+          setAuthRequired(response.data.code === "AUTH_REQUIRED");
+          return;
+        }
+
+        if (!Array.isArray(response.data)) {
+          setErrorMsg("Received an invalid Zerodha holdings response.");
+          setAuthRequired(false);
+          return;
+        }
+
+        setHoldings(response.data.filter(isZerodhaHolding));
+        setAuthRequired(false);
+      } catch (error: unknown) {
+        const zerodhaError = extractZerodhaApiError(error);
+
+        if (zerodhaError) {
+          setErrorMsg(zerodhaError.message);
+          setLoginUrl(zerodhaError.login_url ?? null);
+          setAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
+          return;
+        }
+
+        setErrorMsg("Failed to fetch Zerodha holdings");
+        setAuthRequired(false);
       } finally {
         setLoading(false);
       }
@@ -66,7 +88,14 @@ export default function ZerodhaHoldings() {
           <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : errorMsg ? (
-        <div className="text-red-500 dark:text-red-400 text-sm">{errorMsg}</div>
+        loginUrl || authRequired ? (
+          <ZerodhaLoginPrompt
+            message={errorMsg}
+            loginUrl={loginUrl ?? undefined}
+          />
+        ) : (
+          <div className="text-red-500 dark:text-red-400 text-sm">{errorMsg}</div>
+        )
       ) : holdings.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
