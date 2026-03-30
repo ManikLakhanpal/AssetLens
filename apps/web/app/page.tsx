@@ -6,6 +6,7 @@ import SpotAccount from "./components/SpotAccount";
 import FundingWallet from "./components/FundingWallet";
 import ZerodhaProfile from "./components/ZerodhaProfile";
 import ZerodhaHoldings from "./components/ZerodhaHoldings";
+import MutualFundSips from "./components/MutualFundSips";
 import PortfolioPieChart from "./components/PortfolioPieChart";
 
 type Filter = "all" | "binance" | "zerodha";
@@ -29,7 +30,7 @@ export default function Dashboard() {
       <div className="hidden dark:block absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-teal-900/10 via-transparent to-transparent opacity-70 blur-[80px] pointer-events-none" />
       <div className="hidden dark:block absolute top-[50%] left-[60%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-orange-900/10 via-transparent to-transparent opacity-60 blur-[100px] pointer-events-none" />
       {/* Light mode gradient */}
-      <div className="block dark:hidden absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-slate-50 to-transparent pointer-events-none" />
+      <div className="block dark:hidden absolute top-0 left-0 w-full h-64 bg-linear-to-b from-slate-50 to-transparent pointer-events-none" />
 
       <main className="relative z-10 w-full max-w-6xl mx-auto px-6 py-12 md:py-20 flex flex-col gap-12">
         <Header />
@@ -73,6 +74,7 @@ export default function Dashboard() {
               <ZerodhaProfile />
               <ZerodhaHoldings />
             </div>
+            <MutualFundSips />
           </section>
         )}
       </main>

@@ -128,10 +128,25 @@ export async function getZerodhaHoldings() {
   }
 }
 
-
 export async function getZerodhaMFHoldings() {
   try {
     const holdings = await kiteClient.getMFHoldings();
+    return holdings;
+  } catch (error) {
+    const serviceError = buildZerodhaServiceError(
+      error,
+      "Failed to fetch Zerodha holdings"
+    );
+    console.error("getZerodhaHoldings error:", serviceError.message);
+
+    return serviceError;
+  }
+}
+
+
+export async function getZerodhaMFSIPs() {
+  try {
+    const holdings = await kiteClient.getMFSIPS();
     return holdings;
   } catch (error) {
     const serviceError = buildZerodhaServiceError(

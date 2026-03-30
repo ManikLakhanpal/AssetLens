@@ -5,6 +5,7 @@ import {
   generateAccessToken,
   type ZerodhaServiceError,
   getZerodhaMFHoldings,
+  getZerodhaMFSIPs
 } from "../services/zerodhaService";
 
 function isZerodhaServiceError(data: unknown): data is ZerodhaServiceError {
@@ -50,6 +51,16 @@ export async function fetchZerodhaHoldings(_req: Request, res: Response) {
 export async function fetchZerodhaMFHoldings(_req: Request, res: Response) {
   try {
     const data = await getZerodhaMFHoldings();
+    sendZerodhaResponse(res, data);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({ error: message });
+  }
+}
+
+export async function fetchZerodhaMFSIPs(_req: Request, res: Response) {
+  try {
+    const data = await getZerodhaMFSIPs();
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";

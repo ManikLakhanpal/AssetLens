@@ -45,6 +45,33 @@ export interface ZerodhaMFHolding {
   las_quantity: number;
 }
 
+export interface ZerodhaMFSip {
+  status: "ACTIVE" | "PAUSED" | string;
+  instalment_day: number;
+  tradingsymbol: string;
+  transaction_type: string;
+  next_instalment: string;
+  last_instalment: string;
+  created: string;
+  dividend_type: string;
+  sip_id: string;
+  fund: string;
+  frequency: string;
+  instalments: number;
+  pending_instalments: number;
+  completed_instalments: number;
+  instalment_amount: number;
+  tag: string;
+  weekday: string | null;
+  trigger_price: number;
+  sip_type: string;
+  sip_reg_num: string | null;
+  step_up?: Record<string, number>;
+  fund_source: string;
+  mandate_type: string;
+  mandate_id: string | null;
+}
+
 type UnknownRecord = Record<string, unknown>;
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -104,6 +131,35 @@ export function isZerodhaMFHolding(value: unknown): value is ZerodhaMFHolding {
     typeof value.discrepancy === "boolean" &&
     typeof value.pledged_quantity === "number" &&
     typeof value.las_quantity === "number"
+  );
+}
+
+export function isZerodhaMFSip(value: unknown): value is ZerodhaMFSip {
+  return (
+    isRecord(value) &&
+    typeof value.status === "string" &&
+    typeof value.instalment_day === "number" &&
+    typeof value.tradingsymbol === "string" &&
+    typeof value.transaction_type === "string" &&
+    typeof value.next_instalment === "string" &&
+    typeof value.last_instalment === "string" &&
+    typeof value.created === "string" &&
+    typeof value.dividend_type === "string" &&
+    typeof value.sip_id === "string" &&
+    typeof value.fund === "string" &&
+    typeof value.frequency === "string" &&
+    typeof value.instalments === "number" &&
+    typeof value.pending_instalments === "number" &&
+    typeof value.completed_instalments === "number" &&
+    typeof value.instalment_amount === "number" &&
+    typeof value.tag === "string" &&
+    (typeof value.weekday === "string" || value.weekday === null) &&
+    typeof value.trigger_price === "number" &&
+    typeof value.sip_type === "string" &&
+    (typeof value.sip_reg_num === "string" || value.sip_reg_num === null) &&
+    typeof value.fund_source === "string" &&
+    typeof value.mandate_type === "string" &&
+    (typeof value.mandate_id === "string" || value.mandate_id === null)
   );
 }
 
