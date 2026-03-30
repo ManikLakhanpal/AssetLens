@@ -1,0 +1,19 @@
+[project]
+name = "langchain-service"
+version = "0.1.0"
+description = "FastAPI + LangChain service for Tradeee portfolio chat"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "pydantic>=2.7.0",
+  "langchain>=1.0.3,<2.0.0",
+  "langchain-openai>=1.1.12,<2.0.0",
+  "langchain-google-genai>=4.2.1,<5.0.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+  "ruff>=0.6.0",
+]
+

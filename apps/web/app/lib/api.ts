@@ -30,6 +30,10 @@ export const routes = {
     accountInfo: "/binance/account-info",
     getData: "/binance/get-data",
   },
+  ai: {
+    portfolioSummary: "/ai/portfolio-summary",
+    chat: "/ai/chat",
+  },
 } as const;
 
 export const api = axios.create({

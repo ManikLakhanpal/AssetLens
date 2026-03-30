@@ -3,6 +3,7 @@ import cors from "cors";
 import binanceRoutes from "./routes/binanceRoutes";
 import zerodhaRoutes from "./routes/zerodhaRoutes";
 import portfolioRoutes from "./routes/portfolioRoutes";
+import aiRoutes from "./routes/aiRoutes";
 
 const PORT = process.env.PORT;
 
@@ -16,6 +17,7 @@ app.use(cors());
 app.use('/binance/', binanceRoutes);
 app.use('/zerodha/', zerodhaRoutes);
 app.use('/portfolio/', portfolioRoutes);
+app.use('/ai/', aiRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ message: 'OK' });
