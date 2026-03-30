@@ -15,7 +15,11 @@ export async function generateAccessToken(requestToken: string) {
   } catch (error) {
     const err = error as { message?: string };
     console.error("generateAccessToken error:", err.message);
-    throw new Error(err.message || "Failed to generate access token");
+    
+    return {
+      success: false,
+      message: err.message || "Failed to fetch Zerodha profile",
+    }
   }
 }
 
@@ -27,7 +31,12 @@ export async function getZerodhaProfile() {
   } catch (error) {
     const err = error as { message?: string };
     console.error("getZerodhaProfile error:", err.message);
-    throw new Error(err.message || "Failed to fetch Zerodha profile");
+    
+    return {
+      success: false,
+      message: err.message || "Failed to fetch Zerodha profile",
+    }
+
   }
 }
 
@@ -39,7 +48,11 @@ export async function getZerodhaHoldings() {
   } catch (error) {
     const err = error as { message?: string };
     console.error("getZerodhaHoldings error:", err.message);
-    throw new Error(err.message || "Failed to fetch Zerodha holdings");
+    
+    return {
+      success: false,
+      message: err.message || "Failed to fetch Zerodha profile",
+    }
   }
 }
 

@@ -17,7 +17,7 @@ export interface BinancePortfolioInr {
  * Fetches the Binance funding wallet balance and converts each asset
  * to INR using live CoinGecko prices.
  */
-export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
+export async function getBinancePortfolioInr() {
   // Fetch funding wallet (includes all crypto held on Binance)
   const response = await walletClient.restAPI.fundingWallet();
   const raw = await response.data() as Array<{ asset: string; free: string; locked: string }>;

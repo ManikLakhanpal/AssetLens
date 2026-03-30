@@ -5,7 +5,7 @@ import {
   fundingWalletInfo
 } from "../services/accountService";
 
-export async function fetchFundingWalletBalance(_req: Request, res: Response): Promise<void> {
+export async function fetchFundingWalletBalance(_req: Request, res: Response) {
   try {
     const data = await fundingWalletBalance();
     res.json(data);
@@ -15,7 +15,7 @@ export async function fetchFundingWalletBalance(_req: Request, res: Response): P
   }
 }
 
-export async function fetchAccountInformation(_req: Request, res: Response): Promise<void> {
+export async function fetchAccountInformation(_req: Request, res: Response) {
   try {
     const data = await fundingWalletInfo();
     res.json(data);

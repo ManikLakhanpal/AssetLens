@@ -73,7 +73,7 @@ const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
  */
 export async function getCryptoPricesInr(
   symbols: string[]
-): Promise<Record<string, number>> {
+) {
   const ids: string[] = [];
   const symbolToId: Record<string, string> = {};
 

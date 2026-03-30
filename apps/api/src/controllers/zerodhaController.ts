@@ -5,7 +5,7 @@ import {
   generateAccessToken 
 } from "../services/zerodhaService";
 
-export async function fetchZerodhaProfile(_req: Request, res: Response): Promise<void> {
+export async function fetchZerodhaProfile(_req: Request, res: Response) {
   try {
     const data = await getZerodhaProfile();
     res.json(data);
@@ -15,7 +15,7 @@ export async function fetchZerodhaProfile(_req: Request, res: Response): Promise
   }
 }
 
-export async function fetchZerodhaHoldings(_req: Request, res: Response): Promise<void> {
+export async function fetchZerodhaHoldings(_req: Request, res: Response) {
   try {
     const data = await getZerodhaHoldings();
     res.json(data);
@@ -25,7 +25,7 @@ export async function fetchZerodhaHoldings(_req: Request, res: Response): Promis
   }
 }
 
-export async function generateZerodhaToken(req: Request, res: Response): Promise<void> {
+export async function generateZerodhaToken(req: Request, res: Response) {
   try {
     const { request_token } = req.body as { request_token?: string };
     console.log("Received request_token:", request_token);

@@ -30,6 +30,9 @@ interface AssetData {
 }
 
 type ViewMode = "exchange" | "asset";
+type Settled<T> =
+  | { status: "fulfilled"; value: T }
+  | { status: "rejected"; reason: unknown };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -49,6 +52,18 @@ const PALETTE = [
 ];
 
 const colorFor = (index: number) => PALETTE[index % PALETTE.length];
+
+async function settle<T>(task: T) {
+  try {
+    return { status: "fulfilled", value: await task } as Settled<Awaited<T>>;
+  } catch (reason: unknown) {
+    return { status: "rejected", reason } as Settled<Awaited<T>>;
+  }
+}
+
+async function settlePair<T1, T2>(first: T1, second: T2) {
+  return [await settle(first), await settle(second)] as const;
+}
 
 // ── Custom Tooltip ─────────────────────────────────────────────────────────
 
@@ -79,17 +94,22 @@ export default function PortfolioPieChart() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.allSettled([
-      axios.get("http://localhost:4000/portfolio/summary"),
-      axios.get("http://localhost:4000/portfolio/assets"),
-    ]).then(([summaryRes, assetsRes]) => {
+    const load = async () => {
+      setLoading(true);
+      const [summaryRes, assetsRes] = await settlePair(
+        axios.get("http://localhost:4000/portfolio/summary"),
+        axios.get("http://localhost:4000/portfolio/assets")
+      );
+
       if (summaryRes.status === "fulfilled") setSummaryData(summaryRes.value.data);
       if (assetsRes.status === "fulfilled") setAssetData(assetsRes.value.data);
       if (summaryRes.status === "rejected" && assetsRes.status === "rejected") {
         setErrorMsg("Failed to fetch portfolio data");
       }
-    }).finally(() => setLoading(false));
+      setLoading(false);
+    };
+
+    load();
   }, []);
 
   // Build chart data based on view
