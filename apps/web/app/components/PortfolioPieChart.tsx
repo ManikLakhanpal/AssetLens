@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   PieChart,
   Pie,
@@ -9,6 +8,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
+import { api, routes } from "../lib/api";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -97,8 +98,8 @@ export default function PortfolioPieChart() {
     const load = async () => {
       setLoading(true);
       const [summaryRes, assetsRes] = await settlePair(
-        axios.get("http://localhost:4000/portfolio/summary"),
-        axios.get("http://localhost:4000/portfolio/assets")
+        api.get(routes.portfolio.summary),
+        api.get(routes.portfolio.assets)
       );
 
       if (summaryRes.status === "fulfilled") setSummaryData(summaryRes.value.data);

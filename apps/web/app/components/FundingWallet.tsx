@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api, routes } from "../lib/api";
 
 interface BinanceAssetInr {
   symbol: string;
@@ -29,8 +29,8 @@ export default function FundingWallet() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:4000/binance/inr-value")
+    api
+      .get(routes.portfolio.binanceInrValue)
       .then((res) => setPortfolio(res.data))
       .catch((err) =>
         setErrorMsg(err?.response?.data?.error || "Failed to fetch from backend")

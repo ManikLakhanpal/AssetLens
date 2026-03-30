@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api, routes } from "../lib/api";
 
 interface AccountBalance {
   asset: string;
@@ -17,7 +17,7 @@ export default function SpotAccount() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/account-info");
+        const response = await api.get(routes.binance.accountInfo);
         const data = response.data;
 
         if (data && data.balances) {

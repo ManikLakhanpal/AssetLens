@@ -8,7 +8,7 @@ import {
 const router = Router();
 
 router.get("/binance/inr-value", fetchBinanceInrValue);
-router.get("/portfolio/summary", fetchPortfolioSummary);
-router.get("/portfolio/assets", fetchPortfolioAssets);
+router.get("/summary", fetchPortfolioSummary);
+router.get("/assets", fetchPortfolioAssets);
 
 export default router;

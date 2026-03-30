@@ -7,8 +7,8 @@ import {
 
 const router = Router();
 
-router.get("/zerodha/profile", fetchZerodhaProfile);
-router.get("/zerodha/holdings", fetchZerodhaHoldings);
-router.post("/zerodha/generate-token", generateZerodhaToken);
+router.get("/profile", fetchZerodhaProfile);
+router.get("/holdings", fetchZerodhaHoldings);
+router.post("/generate-token", generateZerodhaToken);
 
 export default router;

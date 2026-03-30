@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import accountRoutes from "./routes/accountRoutes";
+import binanceRoutes from "./routes/binanceRoutes";
 import zerodhaRoutes from "./routes/zerodhaRoutes";
 import portfolioRoutes from "./routes/portfolioRoutes";
 
@@ -13,9 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // * Routes
-app.use(accountRoutes);
-app.use(zerodhaRoutes);
-app.use(portfolioRoutes);
+app.use('/binance/', binanceRoutes);
+app.use('/zerodha/', zerodhaRoutes);
+app.use('/portfolio/', portfolioRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ message: 'OK' });

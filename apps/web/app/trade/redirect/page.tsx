@@ -1,8 +1,8 @@
 "use client";
 
-import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { api, routes } from "../../lib/api";
 import { extractZerodhaApiError, isZerodhaApiError } from "../../lib/zerodha";
 
 type TokenResponse = {
@@ -49,7 +49,7 @@ export default function ZerodhaRedirectPage() {
       }
 
       try {
-        const response = await axios.post("http://localhost:4000/zerodha/generate-token", {
+        const response = await api.post(routes.zerodha.generateToken, {
           request_token: requestToken,
         });
 
