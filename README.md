@@ -94,6 +94,7 @@ Use these templates:
   - `OPENAI_API_KEY` and/or `GEMINI_API_KEY`
 
 ## API Overview
+Please refer to 'Requestly.json' at the root of this project for API endpoint information.
 
 ### Portfolio
 
