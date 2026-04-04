@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import Header from "./components/Header";
 import BinanceHoldings from "./components/BinanceHoldings";
 import ZerodhaProfile from "./components/ZerodhaProfile";
@@ -18,9 +20,24 @@ const filters: { value: Filter; label: string }[] = [
 
 export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<Filter>("all");
+  const mainRef = useRef<HTMLElement>(null);
 
   const showBinance = activeFilter === "all" || activeFilter === "binance";
   const showZerodha = activeFilter === "all" || activeFilter === "zerodha";
+
+  // Staggered cascade animation on initial load
+  useGSAP(() => {
+    if (!mainRef.current) return;
+    
+    gsap.from(".animate-on-load", {
+      y: 40,
+      opacity: 0,
+      duration: 0.6,
+      stagger: 0.15,
+      ease: "power3.out",
+      clearProps: "all",
+    });
+  }, { scope: mainRef });
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-[#050511] text-slate-900 dark:text-zinc-100 selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-200">
@@ -31,11 +48,13 @@ export default function Dashboard() {
       {/* Light mode gradient */}
       <div className="block dark:hidden absolute top-0 left-0 w-full h-64 bg-linear-to-b from-slate-50 to-transparent pointer-events-none" />
 
-      <main className="relative z-10 w-full max-w-6xl mx-auto px-6 py-12 md:py-20 flex flex-col gap-12">
-        <Header />
+      <main ref={mainRef} className="relative z-10 w-full max-w-6xl mx-auto px-6 py-12 md:py-20 flex flex-col gap-12">
+        <div className="animate-on-load">
+          <Header />
+        </div>
 
         {/* Exchange Filter Toggle */}
-        <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/50 w-fit">
+        <div className="animate-on-load flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/50 w-fit">
           {filters.map(({ value, label }) => (
             <button
               key={value}
@@ -52,11 +71,13 @@ export default function Dashboard() {
         </div>
 
         {/* Portfolio Pie Chart — full width */}
-        <PortfolioPieChart />
+        <div className="animate-on-load">
+          <PortfolioPieChart />
+        </div>
 
         {/* Binance Section */}
         {showBinance && (
-          <section className="flex flex-col gap-4">
+          <section className="animate-on-load flex flex-col gap-4">
             <p className="text-xs uppercase tracking-widest text-slate-400 dark:text-zinc-600 font-medium pl-1">Binance</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <BinanceHoldings />
@@ -66,7 +87,7 @@ export default function Dashboard() {
 
         {/* Zerodha Section */}
         {showZerodha && (
-          <section className="flex flex-col gap-4">
+          <section className="animate-on-load flex flex-col gap-4">
             <p className="text-xs uppercase tracking-widest text-slate-400 dark:text-zinc-600 font-medium pl-1">Zerodha</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <ZerodhaProfile />

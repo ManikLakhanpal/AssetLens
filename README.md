@@ -8,7 +8,8 @@ Tradeee is a multi-service portfolio platform for tracking Binance and Zerodha a
 - Zerodha profile, equity holdings, mutual fund holdings, and SIP visibility.
 - Portfolio allocation visualizations (exchange + asset level).
 - FastAPI + LangChain AI service with ChatGPT and Gemini model selection.
-- Floating chat widget with automatic portfolio summary on open.
+- Floating chat widget with automatic portfolio summary on open, rendering rich **Markdown**, with a seamless full-screen mode.
+- Butter-smooth UI transitions and element enter animations powered by **GSAP**.
 
 ## Architecture
 
@@ -34,7 +35,7 @@ See app-specific docs in [`apps/README.md`](apps/README.md).
 
 ## Tech Stack
 
-- **Frontend:** Next.js 16, React 19, Tailwind CSS, Recharts, Axios
+- **Frontend:** Next.js 16, React 19, Tailwind CSS, Recharts, GSAP, React Markdown, Axios
 - **API:** Node.js, Express, TypeScript, Axios
 - **AI Service:** Python, FastAPI, LangChain, LangChain OpenAI, LangChain Google GenAI
 - **Integrations:** Binance Wallet API, Zerodha Kite Connect

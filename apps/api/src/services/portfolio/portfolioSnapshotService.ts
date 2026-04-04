@@ -5,7 +5,6 @@ import {
   getZerodhaMFSIPs,
 } from "../zerodha/zerodhaService";
 import { getBinancePortfolioInr } from "../binance/binanceInrService";
-import { fundingWalletBalance, spotAccountInfo } from "../binance/accountService";
 
 export async function collectPortfolioSnapshot() {
   const [
@@ -15,8 +14,6 @@ export async function collectPortfolioSnapshot() {
     mfHoldingsRes,
     mfSipsRes,
     binancePortfolioRes,
-    binanceFundingWalletRes,
-    binanceAccountInfoRes,
   ] = await Promise.allSettled([
     getPortfolioSummary(),
     getPortfolioAssets(),
@@ -24,8 +21,6 @@ export async function collectPortfolioSnapshot() {
     getZerodhaMFHoldings(),
     getZerodhaMFSIPs(),
     getBinancePortfolioInr(),
-    fundingWalletBalance(),
-    spotAccountInfo(),
   ]);
 
   return {
@@ -41,12 +36,6 @@ export async function collectPortfolioSnapshot() {
 
     binancePortfolio:
       binancePortfolioRes.status === "fulfilled" ? binancePortfolioRes.value : undefined,
-    binanceFundingWallet:
-      binanceFundingWalletRes.status === "fulfilled"
-        ? binanceFundingWalletRes.value
-        : undefined,
-    binanceAccountInfo:
-      binanceAccountInfoRes.status === "fulfilled" ? binanceAccountInfoRes.value : undefined,
   };
 }
 
