@@ -1,4 +1,5 @@
 import walletClient from "./binance/wallet";
+import spotClient from "./binance/spot";
 
 // * Funding Wallet Information
 export async function fundingWalletBalance() {
@@ -25,7 +26,7 @@ export async function fundingWalletBalance() {
 // * User Account Information
 export async function fundingWalletInfo() {
   try {
-    const response = await walletClient.restAPI.accountInfo();
+    const response = await spotClient.restAPI.getAccount();
 
     const rateLimits = response.rateLimits!;
     console.log("fundingWallet() rate limits:", rateLimits);

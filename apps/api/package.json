@@ -22,6 +22,7 @@
   "homepage": "https://github.com/ManikLakhanpal/tradeee#readme",
   "description": "",
   "dependencies": {
+    "@binance/spot": "^28.0.4",
     "@binance/wallet": "^17.0.3",
     "axios": "^1.13.6",
     "cors": "^2.8.6",
