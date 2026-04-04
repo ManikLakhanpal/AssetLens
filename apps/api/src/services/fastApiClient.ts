@@ -23,13 +23,13 @@ export const fastApiClient = {
     message: string;
     model: Model;
     history: Array<{ role: "user" | "assistant"; content: string }>;
-    portfolio_summary?: string;
+    portfolio_context_markdown: string;
   }) {
     const res = await client.post("/chat", {
       message: args.message,
       model: args.model,
       history: args.history,
-      portfolio_summary: args.portfolio_summary,
+      portfolio_context_markdown: args.portfolio_context_markdown,
     });
     return res.data as { reply: string };
   },

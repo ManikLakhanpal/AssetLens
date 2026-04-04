@@ -12,6 +12,18 @@ import {
   type ZerodhaHolding,
 } from "../lib/zerodha";
 
+type Settled<T> =
+  | { status: "fulfilled"; value: T }
+  | { status: "rejected"; reason: unknown };
+
+async function settle<T>(task: T): Promise<Settled<Awaited<T>>> {
+  try {
+    return { status: "fulfilled", value: await task };
+  } catch (reason: unknown) {
+    return { status: "rejected", reason };
+  }
+}
+
 export default function ZerodhaHoldings() {
   const [holdings, setHoldings] = useState<ZerodhaHolding[]>([]);
   const [mfHoldings, setMfHoldings] = useState<ZerodhaMFHolding[]>([]);
@@ -29,10 +41,8 @@ export default function ZerodhaHoldings() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [stocksRes, mfRes] = await Promise.allSettled([
-          api.get(routes.zerodha.holdings),
-          api.get(routes.zerodha.mfHoldings),
-        ]);
+        const stocksRes = await settle(api.get(routes.zerodha.holdings));
+        const mfRes = await settle(api.get(routes.zerodha.mfHoldings));
 
         // Stocks
         if (stocksRes.status === "fulfilled") {

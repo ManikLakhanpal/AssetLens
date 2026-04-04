@@ -63,10 +63,6 @@ async function settle<T>(task: T) {
   }
 }
 
-async function settlePair<T1, T2>(first: T1, second: T2) {
-  return [await settle(first), await settle(second)] as const;
-}
-
 // ── Custom Tooltip ─────────────────────────────────────────────────────────
 
 function CustomTooltip({ active, payload, total }: { active?: boolean; payload?: any[]; total: number }) {
@@ -100,11 +96,9 @@ export default function PortfolioPieChart() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const [summaryRes, assetsRes, mfRes] = await Promise.all([
-        settle(api.get(routes.portfolio.summary)),
-        settle(api.get(routes.portfolio.assets)),
-        settle(api.get(routes.zerodha.mfHoldings)),
-      ]);
+      const summaryRes = await settle(api.get(routes.portfolio.summary));
+      const assetsRes = await settle(api.get(routes.portfolio.assets));
+      const mfRes = await settle(api.get(routes.zerodha.mfHoldings));
 
       if (summaryRes.status === "fulfilled") setSummaryData(summaryRes.value.data);
       if (assetsRes.status === "fulfilled") setAssetData(assetsRes.value.data);

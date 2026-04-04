@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { collectPortfolioSnapshot } from "../services/portfolio/portfolioSnapshotService";
+import { buildPortfolioContextMarkdown } from "../services/portfolio/portfolioContextMarkdown";
 import { fastApiClient } from "../services/fastApiClient";
 
 type Model = "chatgpt" | "gemini";
@@ -43,13 +44,15 @@ router.post("/chat", async (req, res) => {
     }
 
     const history = (req.body?.history ?? []) as ChatMessage[];
-    const portfolio_summary = req.body?.portfolio_summary as string | undefined;
+
+    const snapshot = await collectPortfolioSnapshot();
+    const portfolio_context_markdown = buildPortfolioContextMarkdown(snapshot);
 
     const data = await fastApiClient.chat({
       message,
       model,
       history,
-      portfolio_summary,
+      portfolio_context_markdown,
     });
 
     res.json(data);

@@ -19,7 +19,11 @@ class ChatRequest(BaseModel):
     message: str
     model: Literal["chatgpt", "gemini"]
     history: List[ChatMessage] = Field(default_factory=list)
-    portfolio_summary: Optional[str] = None
+    portfolio_context_markdown: Optional[str] = None
+    portfolio_summary: Optional[str] = Field(
+        default=None,
+        description="Deprecated; prefer portfolio_context_markdown from the API server.",
+    )
 
 
 class SummarizeResponse(BaseModel):

@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+from .chat_agent import run_chat_with_tools
 from .llm_factory import get_llm
 from .prompts import (
     build_chat_system_prompt,
@@ -50,12 +51,17 @@ def summarize(req: SummarizeRequest) -> SummarizeResponse:
 @router.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
     llm = get_llm(req.model)
-    system_prompt = build_chat_system_prompt(req.portfolio_summary)
+    system_prompt = build_chat_system_prompt(
+        req.portfolio_context_markdown,
+        req.portfolio_summary,
+    )
 
-    messages = [SystemMessage(content=system_prompt)]
-    messages.extend(build_history(req.history))
-    messages.append(HumanMessage(content=req.message))
-
-    response = llm.invoke(messages)
-    return ChatResponse(reply=response.content)
+    history_messages = build_history(req.history)
+    reply = run_chat_with_tools(
+        llm,
+        system_prompt,
+        history_messages,
+        req.message,
+    )
+    return ChatResponse(reply=reply)
 

@@ -14,26 +14,24 @@ export interface AssetSlice {
 }
 
 /**
- * Fetches Binance and Zerodha values in parallel and returns
+ * Fetches Binance and Zerodha values sequentially and returns
  * a summary of each exchange's total INR value.
  */
 export async function getPortfolioSummary(): Promise<PortfolioSummary> {
-  const [binanceData, zerodhaHoldings] = await Promise.allSettled([
-    getBinancePortfolioInr(),
-    getZerodhaHoldings(),
-  ]);
+  let binanceData: Awaited<ReturnType<typeof getBinancePortfolioInr>> | undefined;
+  try {
+    binanceData = await getBinancePortfolioInr();
+  } catch {
+    binanceData = undefined;
+  }
 
-  const binance_inr =
-    binanceData.status === "fulfilled" ? binanceData.value.total_inr : 0;
+  const zerodhaHoldings = await getZerodhaHoldings();
 
-  const zerodha_inr =
-    zerodhaHoldings.status === "fulfilled" &&
-    Array.isArray(zerodhaHoldings.value)
-      ? zerodhaHoldings.value.reduce(
-          (sum, h) => sum + h.quantity * h.last_price,
-          0
-        )
-      : 0;
+  const binance_inr = binanceData?.total_inr ?? 0;
+
+  const zerodha_inr = Array.isArray(zerodhaHoldings)
+    ? zerodhaHoldings.reduce((sum, h) => sum + h.quantity * h.last_price, 0)
+    : 0;
 
   return {
     binance_inr,
@@ -50,26 +48,27 @@ export async function getPortfolioAssets(): Promise<{
   assets: AssetSlice[];
   total_inr: number;
 }> {
-  const [binanceData, zerodhaHoldings] = await Promise.allSettled([
-    getBinancePortfolioInr(),
-    getZerodhaHoldings(),
-  ]);
+  let binanceData: Awaited<ReturnType<typeof getBinancePortfolioInr>> | undefined;
+  try {
+    binanceData = await getBinancePortfolioInr();
+  } catch {
+    binanceData = undefined;
+  }
+
+  const zerodhaHoldings = await getZerodhaHoldings();
 
   const slices: AssetSlice[] = [];
 
-  if (binanceData.status === "fulfilled") {
-    for (const a of binanceData.value.assets) {
+  if (binanceData) {
+    for (const a of binanceData.assets) {
       if (a.value_inr > 10) {
         slices.push({ name: a.symbol, value: a.value_inr, exchange: "Binance" });
       }
     }
   }
 
-  if (
-    zerodhaHoldings.status === "fulfilled" &&
-    Array.isArray(zerodhaHoldings.value)
-  ) {
-    for (const h of zerodhaHoldings.value) {
+  if (Array.isArray(zerodhaHoldings)) {
+    for (const h of zerodhaHoldings) {
       const value = h.quantity * h.last_price;
       if (value > 10) {
         slices.push({
