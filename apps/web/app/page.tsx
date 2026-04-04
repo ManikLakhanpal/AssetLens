@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import Header from "./components/Header";
-import SpotAccount from "./components/SpotAccount";
-import FundingWallet from "./components/FundingWallet";
+import BinanceHoldings from "./components/BinanceHoldings";
 import ZerodhaProfile from "./components/ZerodhaProfile";
 import ZerodhaHoldings from "./components/ZerodhaHoldings";
 import MutualFundSips from "./components/MutualFundSips";
@@ -60,8 +59,7 @@ export default function Dashboard() {
           <section className="flex flex-col gap-4">
             <p className="text-xs uppercase tracking-widest text-slate-400 dark:text-zinc-600 font-medium pl-1">Binance</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <SpotAccount />
-              <FundingWallet />
+              <BinanceHoldings />
             </div>
           </section>
         )}
