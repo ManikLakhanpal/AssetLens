@@ -16,8 +16,8 @@ export function apiUrl(path: string): string {
 export const routes = {
   zerodha: {
     profile: "/zerodha/profile",
-    holdings: "/zerodha/holdings",
-    mfHoldings: "/zerodha/mf-holdings",
+    holdings: "/zerodha/stock-holdings-data",
+    mfHoldings: "/zerodha/mf-holdings-data",
     mfSips: "/zerodha/mf-sips",
     generateToken: "/zerodha/generate-token",
   },
@@ -27,8 +27,8 @@ export const routes = {
     binanceInrValue: "/portfolio/binance/inr-value",
   },
   binance: {
-    accountInfo: "/binance/account-info",
-    getData: "/binance/get-data",
+    accountInfo: "/binance/spot-account-data",
+    getData: "/binance/funding-account-data",
   },
   ai: {
     portfolioSummary: "/ai/portfolio-summary",

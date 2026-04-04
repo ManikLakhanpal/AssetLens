@@ -14,10 +14,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // * Routes
-app.use('/binance/', binanceRoutes);
-app.use('/zerodha/', zerodhaRoutes);
-app.use('/portfolio/', portfolioRoutes);
-app.use('/ai/', aiRoutes);
+app.use('/binance', binanceRoutes);
+app.use('/zerodha', zerodhaRoutes);
+app.use('/portfolio', portfolioRoutes);
+app.use('/ai', aiRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ message: 'OK' });

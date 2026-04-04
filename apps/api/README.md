@@ -15,12 +15,12 @@ Express + TypeScript backend for portfolio aggregation, broker integrations, and
   - `GET /portfolio/assets`
   - `GET /portfolio/binance/inr-value`
 - **Binance**
-  - `GET /binance/get-data`
-  - `GET /binance/account-info`
+  - `GET /binance/funding-account-data`
+  - `GET /binance/spot-account-data`
 - **Zerodha**
   - `GET /zerodha/profile`
-  - `GET /zerodha/holdings`
-  - `GET /zerodha/mf-holdings`
+  - `GET /zerodha/stock-holdings-data`
+  - `GET /zerodha/mf-holdings-data`
   - `GET /zerodha/mf-sips`
   - `POST /zerodha/generate-token`
 - **AI proxy**

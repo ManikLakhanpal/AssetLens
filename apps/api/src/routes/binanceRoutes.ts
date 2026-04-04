@@ -7,7 +7,7 @@ import {
 
 const router = Router();
 
-router.get("/get-data", fetchFundingWalletBalance);
-router.get("/account-info", fetchSpotAccountInfo);
+router.get("/funding-account-data", fetchFundingWalletBalance);
+router.get("/spot-account-data", fetchSpotAccountInfo);
 
 export default router;
