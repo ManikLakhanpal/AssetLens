@@ -11,15 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ManikLakhanpal/tradeee.git"
+    "url": "git+https://github.com/ManikLakhanpal/assetlens.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ManikLakhanpal/tradeee/issues"
+    "url": "https://github.com/ManikLakhanpal/assetlens/issues"
   },
-  "homepage": "https://github.com/ManikLakhanpal/tradeee#readme",
+  "homepage": "https://github.com/ManikLakhanpal/assetlens#readme",
   "description": "",
   "dependencies": {
     "@binance/spot": "^28.0.4",

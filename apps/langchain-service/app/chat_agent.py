@@ -6,8 +6,8 @@ from typing import List
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 
-from .route_tools import TOOL_NAME_TO_PATH, tradeee_route_tools
-from .api_fetch import fetch_tradeee_get
+from .route_tools import TOOL_NAME_TO_PATH, assetlens_route_tools
+from .api_fetch import fetch_assetlens_get
 
 
 def _extract_text(ai: AIMessage) -> str:
@@ -33,7 +33,7 @@ def _tool_messages_for_ai_message(ai: AIMessage) -> List[ToolMessage]:
         name = tc.get("name") or ""
         path = TOOL_NAME_TO_PATH.get(name)
         if path is not None:
-            payload = fetch_tradeee_get(path)
+            payload = fetch_assetlens_get(path)
         else:
             payload = json.dumps({"error": "unknown_tool", "name": name})
         out.append(ToolMessage(content=payload, tool_call_id=tid))
@@ -48,7 +48,7 @@ def run_chat_with_tools(
     *,
     max_tool_rounds: int = 14,
 ) -> str:
-    llm_bound = llm.bind_tools(tradeee_route_tools)
+    llm_bound = llm.bind_tools(assetlens_route_tools)
 
     messages: List[BaseMessage] = [SystemMessage(content=system_prompt)]
     messages.extend(history)

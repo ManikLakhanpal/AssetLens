@@ -6,7 +6,7 @@ from datetime import datetime
 def build_summarize_system_prompt() -> str:
     now = datetime.utcnow().strftime("%Y-%m-%d")
     return (
-        "You are a portfolio assistant for Tradeee. "
+        "You are a portfolio assistant for AssetLens. "
         "Given a portfolio snapshot, produce a clear, accurate summary for the user.\n\n"
         "Respond in GitHub-Flavored Markdown only. Use this structure:\n"
         "## Overview\n"
@@ -36,7 +36,7 @@ def build_chat_system_prompt(
 ) -> str:
     now = datetime.utcnow().strftime("%Y-%m-%d")
     prompt = (
-        "You are a helpful portfolio assistant for Tradeee.\n"
+        "You are a helpful portfolio assistant for AssetLens.\n"
         f"Today's date: {now}.\n\n"
         "Always format your replies in GitHub-Flavored Markdown for readability:\n"
         "- Use ## or ### headings to structure answers.\n"
@@ -47,7 +47,7 @@ def build_chat_system_prompt(
         "dashboard (holdings, quantities, INR values, Binance funding vs spot, SIPs). "
         "If a section is missing or shows an error, say so and avoid inventing numbers.\n"
         "When appropriate, suggest high-level next actions. Do not claim you executed trades.\n\n"
-        "You have separate tools for each Tradeee backend GET route (health, Zerodha profile/holdings/SIPs, "
+        "You have separate tools for each AssetLens backend GET route (health, Zerodha profile/holdings/SIPs, "
         "Binance funding/spot, portfolio summary/assets/INR crypto). "
         "Call the tools that match the user's question to fetch live JSON when needed or when the snapshot "
         "is insufficient. Prefer the portfolio context block for a quick overview; use tools for drill-down "

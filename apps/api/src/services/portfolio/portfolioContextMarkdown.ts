@@ -48,7 +48,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
   const parts: string[] = [];
   parts.push("## Portfolio context (dashboard snapshot)");
   parts.push(
-    "_Data below matches what the Tradeee dashboard aggregates. Use it as the source of truth for holdings, quantities, and values._\n"
+    "_Data below matches what the AssetLens dashboard aggregates. Use it as the source of truth for holdings, quantities, and values._\n"
   );
 
   // —— Exchange totals (stocks + crypto pie; MF added where we compute) ——

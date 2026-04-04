@@ -5,9 +5,9 @@ import urllib.error
 import urllib.request
 from typing import FrozenSet
 
-from .config import get_tradeee_api_base_url
+from .config import get_assetlens_api_base_url
 
-# Every read-only GET route mounted on the Tradeee Node API (apps/api/src/server.ts).
+# Every read-only GET route mounted on the AssetLens Node API (apps/api/src/server.ts).
 ALLOWED_GET_PATHS: FrozenSet[str] = frozenset(
     {
         "/health",
@@ -31,8 +31,8 @@ def normalize_route(route: str) -> str:
     return r.rstrip("/") or "/"
 
 
-def fetch_tradeee_get(path: str) -> str:
-    """Perform an HTTP GET against the Tradeee Node API (allowlisted paths only)."""
+def fetch_assetlens_get(path: str) -> str:
+    """Perform an HTTP GET against the AssetLens Node API (allowlisted paths only)."""
     normalized = normalize_route(path)
     if normalized not in ALLOWED_GET_PATHS:
         return json.dumps(
@@ -43,7 +43,7 @@ def fetch_tradeee_get(path: str) -> str:
             }
         )
 
-    base = get_tradeee_api_base_url().rstrip("/")
+    base = get_assetlens_api_base_url().rstrip("/")
     url = f"{base}{normalized}"
     try:
         req = urllib.request.Request(url, method="GET", headers={"Accept": "application/json"})

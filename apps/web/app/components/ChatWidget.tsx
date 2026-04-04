@@ -167,7 +167,7 @@ export default function ChatWidget() {
               <div className="flex flex-col">
                 <div className="text-base font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
-                  Tradeee AI
+                  AssetLens AI
                 </div>
                 <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                   Ask a question — portfolio context refreshes each message
@@ -247,7 +247,7 @@ export default function ChatWidget() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <p className="text-slate-500 dark:text-zinc-400 max-w-[200px] leading-relaxed">
-                    Ask Tradeee AI about your portfolio insights or next moves.
+                    Ask AssetLens AI about your portfolio insights or next moves.
                   </p>
                 </div>
               )}

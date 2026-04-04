@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from langchain_core.tools import StructuredTool
 
-from .api_fetch import fetch_tradeee_get
+from .api_fetch import fetch_assetlens_get
 
 # (tool_name, path, description) — one LangChain tool per Node GET route.
 _ROUTE_SPECS: tuple[tuple[str, str, str], ...] = (
     (
         "get_api_health",
         "/health",
-        "Check whether the Tradeee Node API is up. Returns JSON like {\"message\":\"OK\"}.",
+        "Check whether the AssetLens Node API is up. Returns JSON like {\"message\":\"OK\"}.",
     ),
     (
         "get_zerodha_profile",
@@ -63,7 +63,7 @@ TOOL_NAME_TO_PATH: dict[str, str] = {name: path for name, path, _ in _ROUTE_SPEC
 
 def _make_route_tool(name: str, path: str, description: str) -> StructuredTool:
     def tool_fn() -> str:
-        return fetch_tradeee_get(path)
+        return fetch_assetlens_get(path)
 
     tool_fn.__name__ = name
     return StructuredTool.from_function(
@@ -73,6 +73,6 @@ def _make_route_tool(name: str, path: str, description: str) -> StructuredTool:
     )
 
 
-tradeee_route_tools: list[StructuredTool] = [
+assetlens_route_tools: list[StructuredTool] = [
     _make_route_tool(name, path, desc) for name, path, desc in _ROUTE_SPECS
 ]
