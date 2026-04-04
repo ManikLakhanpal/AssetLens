@@ -1,4 +1,4 @@
-import kiteClient from "./zerodha/kite";
+import kiteClient from "./kite";
 
 export type ZerodhaServiceError = {
   success: false;

@@ -3,9 +3,9 @@ import {
   getZerodhaHoldings,
   getZerodhaMFHoldings,
   getZerodhaMFSIPs,
-} from "./zerodhaService";
-import { getBinancePortfolioInr } from "./binanceInrService";
-import { fundingWalletBalance, fundingWalletInfo } from "./accountService";
+} from "../zerodha/zerodhaService";
+import { getBinancePortfolioInr } from "../binance/binanceInrService";
+import { fundingWalletBalance, spotAccountInfo } from "../binance/accountService";
 
 export async function collectPortfolioSnapshot() {
   const [
@@ -25,7 +25,7 @@ export async function collectPortfolioSnapshot() {
     getZerodhaMFSIPs(),
     getBinancePortfolioInr(),
     fundingWalletBalance(),
-    fundingWalletInfo(),
+    spotAccountInfo(),
   ]);
 
   return {

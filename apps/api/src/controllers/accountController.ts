@@ -1,9 +1,8 @@
 import type { Request, Response } from "express";
-
 import { 
   fundingWalletBalance,
-  fundingWalletInfo
-} from "../services/accountService";
+  spotAccountInfo
+} from "../services/binance/accountService";
 
 export async function fetchFundingWalletBalance(_req: Request, res: Response) {
   try {
@@ -15,9 +14,9 @@ export async function fetchFundingWalletBalance(_req: Request, res: Response) {
   }
 }
 
-export async function fetchAccountInformation(_req: Request, res: Response) {
+export async function fetchSpotAccountInfo(_req: Request, res: Response) {
   try {
-    const data = await fundingWalletInfo();
+    const data = await spotAccountInfo();
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";

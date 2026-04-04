@@ -1,5 +1,5 @@
-import { getBinancePortfolioInr } from "./binanceInrService";
-import { getZerodhaHoldings } from "./zerodhaService";
+import { getBinancePortfolioInr } from "../binance/binanceInrService";
+import { getZerodhaHoldings } from "../zerodha/zerodhaService";
 
 export interface PortfolioSummary {
   binance_inr: number;

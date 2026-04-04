@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { getBinancePortfolioInr } from "../services/binanceInrService";
-import { getPortfolioSummary, getPortfolioAssets } from "../services/portfolioSummaryService";
+import { getBinancePortfolioInr } from "../services/binance/binanceInrService";
+import { getPortfolioSummary, getPortfolioAssets } from "../services/portfolio/portfolioSummaryService";
 
 export async function fetchBinanceInrValue(_req: Request, res: Response) {
   try {

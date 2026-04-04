@@ -6,7 +6,7 @@ import {
   type ZerodhaServiceError,
   getZerodhaMFHoldings,
   getZerodhaMFSIPs
-} from "../services/zerodhaService";
+} from "../services/zerodha/zerodhaService";
 
 function isZerodhaServiceError(data: unknown): data is ZerodhaServiceError {
   return Boolean(

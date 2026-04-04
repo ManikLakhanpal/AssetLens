@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { collectPortfolioSnapshot } from "../services/portfolioSnapshotService";
+import { collectPortfolioSnapshot } from "../services/portfolio/portfolioSnapshotService";
 import { fastApiClient } from "../services/fastApiClient";
 
 type Model = "chatgpt" | "gemini";
