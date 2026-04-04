@@ -1,6 +1,6 @@
-# Tradeee
+# AssetLens
 
-Tradeee is a multi-service portfolio platform for tracking Binance and Zerodha assets, including mutual fund holdings and SIPs, with an AI-powered chat assistant for portfolio summaries and Q&A.
+AssetLens is a multi-service portfolio platform for tracking Binance and Zerodha assets, including mutual fund holdings and SIPs, with an AI-powered chat assistant for portfolio summaries and Q&A.
 
 ## Features
 

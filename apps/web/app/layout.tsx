@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tradeee | Portfolio Management",
+  title: "AssetLens | Portfolio Management",
   description: "Manage your Zerodha and Binance portfolios elegantly.",
 };
 

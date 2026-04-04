@@ -2,8 +2,7 @@
 
 FastAPI + LangChain service used by the Node API for:
 
-- portfolio summarization (`/summarize`)
-- conversational replies (`/chat`)
+- `POST /chat` (Chat completion with tools, receiving `portfolio_context_markdown`)
 
 ## Endpoints
 
@@ -38,7 +37,7 @@ Input:
     { "role": "user", "content": "..." },
     { "role": "assistant", "content": "..." }
   ],
-  "portfolio_summary": "..."
+  "portfolio_context_markdown": "..."
 }
 ```
 

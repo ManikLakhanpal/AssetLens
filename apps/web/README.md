@@ -4,9 +4,9 @@ Next.js frontend for portfolio visualization and AI chat.
 
 ## Responsibilities
 
-- Render portfolio dashboard cards and charts.
+- Render portfolio dashboard cards and charts with **GSAP** staggered enter animations.
 - Display Binance + Zerodha account data.
-- Provide bottom-right AI chat widget with model toggle (`chatgpt` / `gemini`).
+- Provide bottom-right AI chat widget with full-screen mode, native **Markdown** rendering, and model toggle (`chatgpt` / `gemini`).
 
 ## Required Environment Variable
 

@@ -1,7 +1,7 @@
 [project]
 name = "langchain-service"
 version = "0.1.0"
-description = "FastAPI + LangChain service for Tradeee portfolio chat"
+description = "FastAPI + LangChain service for AssetLens portfolio chat"
 requires-python = ">=3.11,<3.13"
 dependencies = [
   "fastapi>=0.115.0",

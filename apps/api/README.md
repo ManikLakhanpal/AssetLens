@@ -24,7 +24,6 @@ Express + TypeScript backend for portfolio aggregation, broker integrations, and
   - `GET /zerodha/mf-sips`
   - `POST /zerodha/generate-token`
 - **AI proxy**
-  - `POST /ai/portfolio-summary`
   - `POST /ai/chat`
 
 ## Environment Variables
