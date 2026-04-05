@@ -2,7 +2,9 @@
 
 FastAPI + LangChain service used by the Node API for:
 
-- `POST /chat` (Chat completion with tools, receiving `portfolio_context_markdown`)
+- `POST /chat`: Chat completion with dynamically generated tools mapping to the Node API.
+  - Supports fetching live context (`/portfolio/summary`, `/binance/funding-account-data`, etc.)
+  - Supports making state changes via bound Action Tools (e.g. `post_binance_convert` and `post_binance_transfer`) natively translating intent to HTTP POST requests.
 
 ## Endpoints
 

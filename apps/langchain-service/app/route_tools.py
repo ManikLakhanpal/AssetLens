@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from langchain_core.tools import StructuredTool
+from langchain_core.tools import StructuredTool, tool
 
-from .api_fetch import fetch_assetlens_get
+from .api_fetch import fetch_assetlens_get, fetch_assetlens_post
 
 # (tool_name, path, description) — one LangChain tool per Node GET route.
 _ROUTE_SPECS: tuple[tuple[str, str, str], ...] = (
@@ -56,6 +56,11 @@ _ROUTE_SPECS: tuple[tuple[str, str, str], ...] = (
         "/portfolio/assets",
         "Per-symbol INR slices for stocks and crypto (above ₹10), sorted by value.",
     ),
+    (
+        "get_binance_permissions",
+        "/binance/permissions",
+        "Fetch the active capabilities (Can Trade, Can Withdraw, etc.) attached to the API key.",
+    ),
 )
 
 TOOL_NAME_TO_PATH: dict[str, str] = {name: path for name, path, _ in _ROUTE_SPECS}
@@ -76,3 +81,27 @@ def _make_route_tool(name: str, path: str, description: str) -> StructuredTool:
 assetlens_route_tools: list[StructuredTool] = [
     _make_route_tool(name, path, desc) for name, path, desc in _ROUTE_SPECS
 ]
+
+@tool
+def post_binance_convert(symbol: str, side: str, amount: float) -> str:
+    """
+    Execute a market spot trade to convert assets on Binance.
+    - symbol: e.g. "BTCUSDT"
+    - side: "BUY" or "SELL" 
+    - amount: How much of the quote asset to spend (for BUY) or how much to sell (for SELL).
+    """
+    return fetch_assetlens_post("/binance/convert", {"symbol": symbol, "side": side.upper(), "amount": amount})
+
+assetlens_route_tools.append(post_binance_convert)
+
+@tool
+def post_binance_transfer(type: str, asset: str, amount: float) -> str:
+    """
+    Execute a universal transfer between spot and funding wallets on Binance.
+    - type: "MAIN_FUNDING" (Spot to Funding) or "FUNDING_MAIN" (Funding to Spot)
+    - asset: e.g. "USDT" 
+    - amount: How much of the asset to transfer.
+    """
+    return fetch_assetlens_post("/binance/transfer", {"type": type.upper(), "asset": asset.upper(), "amount": amount})
+
+assetlens_route_tools.append(post_binance_transfer)
