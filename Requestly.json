@@ -270,7 +270,7 @@
         "type": "http",
         "request": {
           "url": "http://localhost:4000/binance/convert",
-          "method": "GET",
+          "method": "POST",
           "headers": [],
           "queryParams": [],
           "body": [
@@ -293,7 +293,7 @@
             {
               "id": 1775327478339,
               "key": "amount",
-              "value": "1",
+              "value": "0.5",
               "isEnabled": true,
               "description": "",
               "dataType": "string"
@@ -301,7 +301,43 @@
           ],
           "contentType": "application/x-www-form-urlencoded"
         },
-        "response": null,
+        "response": {
+          "body": "{\"error\":\"Invalid symbol.\"}",
+          "time": 226.56212508678436,
+          "headers": [
+            {
+              "key": "x-powered-by",
+              "value": "Express"
+            },
+            {
+              "key": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "key": "content-type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "content-length",
+              "value": "27"
+            },
+            {
+              "key": "etag",
+              "value": "W/\"1b-vLSBdz4yI/uuEkT+h9IYwq1T/z4\""
+            },
+            {
+              "key": "date",
+              "value": "Sun, 05 Apr 2026 07:48:22 GMT"
+            },
+            {
+              "key": "connection",
+              "value": "close"
+            }
+          ],
+          "status": 500,
+          "statusText": "Internal Server Error",
+          "redirectedUrl": ""
+        },
         "scripts": {
           "preRequest": "",
           "postResponse": ""
@@ -310,12 +346,105 @@
           "currentAuthType": "INHERIT",
           "authConfigStore": {}
         },
+        "testResults": [],
         "examples": []
       },
       "deleted": false,
       "collectionId": "5cc1af9d-21c8-460d-ac31-74ad21875c02",
       "rank": "aw",
       "id": "e02fb489-9811-4814-8847-ffd5462a18e1",
+      "description": ""
+    },
+    {
+      "name": "Binance Wallet Transfer",
+      "type": "api",
+      "data": {
+        "type": "http",
+        "request": {
+          "url": "http://localhost:4000/binance/transfer",
+          "method": "POST",
+          "headers": [],
+          "queryParams": [],
+          "body": [
+            {
+              "id": 1775375183152,
+              "key": "type",
+              "value": "MAIN_FUNDING",
+              "isEnabled": true,
+              "description": "",
+              "dataType": "string"
+            },
+            {
+              "id": 1775375204847,
+              "key": "asset",
+              "value": "USDT",
+              "isEnabled": true,
+              "description": "",
+              "dataType": "string"
+            },
+            {
+              "id": 1775375207833,
+              "key": "amount",
+              "value": "1",
+              "isEnabled": true,
+              "description": "",
+              "dataType": "string"
+            }
+          ],
+          "contentType": "application/x-www-form-urlencoded"
+        },
+        "response": {
+          "body": "{\"tranId\":360460851995}",
+          "time": 364.0139169692993,
+          "headers": [
+            {
+              "key": "x-powered-by",
+              "value": "Express"
+            },
+            {
+              "key": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "key": "content-type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "content-length",
+              "value": "23"
+            },
+            {
+              "key": "etag",
+              "value": "W/\"17-GK5v4EmpEUwHrV/rHcmyDPTVJBY\""
+            },
+            {
+              "key": "date",
+              "value": "Sun, 05 Apr 2026 07:47:22 GMT"
+            },
+            {
+              "key": "connection",
+              "value": "close"
+            }
+          ],
+          "status": 200,
+          "statusText": "OK",
+          "redirectedUrl": ""
+        },
+        "scripts": {
+          "preRequest": "",
+          "postResponse": ""
+        },
+        "auth": {
+          "currentAuthType": "INHERIT",
+          "authConfigStore": {}
+        },
+        "testResults": [],
+        "examples": []
+      },
+      "deleted": false,
+      "collectionId": "5cc1af9d-21c8-460d-ac31-74ad21875c02",
+      "rank": "ax",
+      "id": "ea07247d-2408-4f79-867b-67fcc9e7b666",
       "description": ""
     },
     {
