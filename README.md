@@ -106,6 +106,9 @@ Please refer to 'Requestly.json' at the root of this project for API endpoint in
 
 - `GET /binance/funding-account-data`
 - `GET /binance/spot-account-data`
+- `GET /binance/permissions`
+- `POST /binance/convert`
+- `POST /binance/transfer`
 
 ### Zerodha
 

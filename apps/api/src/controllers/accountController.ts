@@ -3,7 +3,8 @@ import {
   fundingWalletBalance,
   spotAccountInfo,
   convertAsset,
-  permissions
+  permissions,
+  transferAsset
 } from "../services/binance/accountService";
 
 export async function fetchFundingWalletBalance(_req: Request, res: Response) {
@@ -46,6 +47,23 @@ export async function fetchPermissions(_req: Request, res: Response) {
 export async function fetchSpotAccountInfo(_req: Request, res: Response) {
   try {
     const data = await spotAccountInfo();
+    res.json(data);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({ error: message });
+  }
+}
+
+export async function transferAssetHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { type, asset, amount } = req.body;
+
+    if (!type || !asset || amount === undefined) {
+      res.status(400).json({ error: "Missing required parameters: type, asset, amount" });
+      return;
+    }
+
+    const data = await transferAsset(type, asset, Number(amount));
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";

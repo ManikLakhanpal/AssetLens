@@ -88,3 +88,28 @@ export async function spotAccountInfo() {
     throw new Error(err.response?.data?.msg || err.message || "Request failed");
   }
 }
+
+export async function transferAsset(type: "MAIN_FUNDING" | "FUNDING_MAIN", asset: string, amount: number) {
+  try {
+    const response = await walletClient.restAPI.userUniversalTransfer({
+      type,
+      asset,
+      amount
+    });
+
+    const rateLimits = response.rateLimits!;
+    console.log("transferAsset() rate limits:", rateLimits);
+
+    const data = await response.data();
+    console.log("transferAsset() response:", data);
+
+    return data;
+  } catch (error) {
+    const err = error as {
+      response?: { data?: { msg?: string } };
+      message?: string;
+    };
+    console.error(err.response?.data || err.message);
+    throw new Error(err.response?.data?.msg || err.message || "Request failed");
+  }
+}

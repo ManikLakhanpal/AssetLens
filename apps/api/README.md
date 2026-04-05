@@ -17,6 +17,9 @@ Express + TypeScript backend for portfolio aggregation, broker integrations, and
 - **Binance**
   - `GET /binance/funding-account-data`
   - `GET /binance/spot-account-data`
+  - `GET /binance/permissions`
+  - `POST /binance/convert`
+  - `POST /binance/transfer`
 - **Zerodha**
   - `GET /zerodha/profile`
   - `GET /zerodha/stock-holdings-data`

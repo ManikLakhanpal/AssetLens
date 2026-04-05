@@ -93,3 +93,15 @@ def post_binance_convert(symbol: str, side: str, amount: float) -> str:
     return fetch_assetlens_post("/binance/convert", {"symbol": symbol, "side": side.upper(), "amount": amount})
 
 assetlens_route_tools.append(post_binance_convert)
+
+@tool
+def post_binance_transfer(type: str, asset: str, amount: float) -> str:
+    """
+    Execute a universal transfer between spot and funding wallets on Binance.
+    - type: "MAIN_FUNDING" (Spot to Funding) or "FUNDING_MAIN" (Funding to Spot)
+    - asset: e.g. "USDT" 
+    - amount: How much of the asset to transfer.
+    """
+    return fetch_assetlens_post("/binance/transfer", {"type": type.upper(), "asset": asset.upper(), "amount": amount})
+
+assetlens_route_tools.append(post_binance_transfer)

@@ -27,6 +27,7 @@ ALLOWED_GET_PATHS: FrozenSet[str] = frozenset(
 ALLOWED_POST_PATHS: FrozenSet[str] = frozenset(
     {
         "/binance/convert",
+        "/binance/transfer",
     }
 )
 

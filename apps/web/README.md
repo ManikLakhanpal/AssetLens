@@ -7,6 +7,7 @@ Next.js frontend for portfolio visualization and AI chat.
 - Render portfolio dashboard cards and charts with **GSAP** staggered enter animations.
 - Display Binance + Zerodha account data.
 - Provide bottom-right AI chat widget with full-screen mode, native **Markdown** rendering, and model toggle (`chatgpt` / `gemini`).
+  - Native integration with LangChain action endpoints allow the connected AI to perform account modifications seamlessly (like executing direct Spot Trades or Universal Wallet Transfers).
 
 ## Required Environment Variable
 
