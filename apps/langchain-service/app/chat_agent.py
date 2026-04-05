@@ -28,15 +28,26 @@ def _extract_text(ai: AIMessage) -> str:
 def _tool_messages_for_ai_message(ai: AIMessage) -> List[ToolMessage]:
     out: List[ToolMessage] = []
     calls = getattr(ai, "tool_calls", None) or []
+
+    # Map tools by name for easy lookup
+    tools_by_name = {t.name: t for t in assetlens_route_tools}
+
     for tc in calls:
         tid = tc.get("id") or ""
         name = tc.get("name") or ""
-        path = TOOL_NAME_TO_PATH.get(name)
-        if path is not None:
-            payload = fetch_assetlens_get(path)
+        args = tc.get("args") or {}
+
+        tool = tools_by_name.get(name)
+        if tool is not None:
+            try:
+                # Call the LangChain tool directly with its args
+                payload = tool.invoke(args)
+            except Exception as e:
+                payload = json.dumps({"error": "tool_execution_failed", "message": str(e)})
         else:
             payload = json.dumps({"error": "unknown_tool", "name": name})
-        out.append(ToolMessage(content=payload, tool_call_id=tid))
+        
+        out.append(ToolMessage(content=str(payload), tool_call_id=tid))
     return out
 
 

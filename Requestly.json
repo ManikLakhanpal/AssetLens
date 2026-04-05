@@ -234,6 +234,91 @@
       "description": ""
     },
     {
+      "name": "Binance API Permissions",
+      "type": "api",
+      "data": {
+        "type": "http",
+        "request": {
+          "url": "http://localhost:4000/binance/permissions",
+          "method": "GET",
+          "headers": [],
+          "queryParams": [],
+          "body": "",
+          "contentType": "text/plain"
+        },
+        "response": null,
+        "scripts": {
+          "preRequest": "",
+          "postResponse": ""
+        },
+        "auth": {
+          "currentAuthType": "INHERIT",
+          "authConfigStore": {}
+        },
+        "examples": []
+      },
+      "deleted": false,
+      "collectionId": "5cc1af9d-21c8-460d-ac31-74ad21875c02",
+      "rank": "av",
+      "id": "1c2bbd81-7260-45fc-8c9e-3ac88b9e129a",
+      "description": ""
+    },
+    {
+      "name": "Binance Convert Fund",
+      "type": "api",
+      "data": {
+        "type": "http",
+        "request": {
+          "url": "http://localhost:4000/binance/convert",
+          "method": "GET",
+          "headers": [],
+          "queryParams": [],
+          "body": [
+            {
+              "id": 1775327450587,
+              "key": "symbol",
+              "value": "PEPEUSDT",
+              "isEnabled": true,
+              "description": "",
+              "dataType": "string"
+            },
+            {
+              "id": 1775327471006,
+              "key": "side",
+              "value": "MARKET",
+              "isEnabled": true,
+              "description": "",
+              "dataType": "string"
+            },
+            {
+              "id": 1775327478339,
+              "key": "amount",
+              "value": "1",
+              "isEnabled": true,
+              "description": "",
+              "dataType": "string"
+            }
+          ],
+          "contentType": "application/x-www-form-urlencoded"
+        },
+        "response": null,
+        "scripts": {
+          "preRequest": "",
+          "postResponse": ""
+        },
+        "auth": {
+          "currentAuthType": "INHERIT",
+          "authConfigStore": {}
+        },
+        "examples": []
+      },
+      "deleted": false,
+      "collectionId": "5cc1af9d-21c8-460d-ac31-74ad21875c02",
+      "rank": "aw",
+      "id": "e02fb489-9811-4814-8847-ffd5462a18e1",
+      "description": ""
+    },
+    {
       "name": "LangChain",
       "type": "collection",
       "data": {
