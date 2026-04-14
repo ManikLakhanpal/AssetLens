@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api, routes } from "../../lib/api";
 import { extractZerodhaApiError, isZerodhaApiError } from "../../lib/zerodha";
@@ -21,22 +21,31 @@ function isTokenResponse(value: unknown): value is TokenResponse {
   );
 }
 
-export default function ZerodhaRedirectPage() {
+function ZerodhaRedirectContent() {
   const searchParams = useSearchParams();
+  const hasCalledGenerate = useRef(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const requestToken = searchParams.get("request_token");
-  const accessTokenFromParams = searchParams.get("access_token");
-
   useEffect(() => {
-    let ignore = false;
-
     const resolveAccessToken = async () => {
-      // If for some reason the access token arrives directly in the query string
-      // (not the normal Kite flow), the backend already saved it via the normal
-      // redirect so we just treat this as success.
+      if (hasCalledGenerate.current) {
+        return;
+      }
+
+      const fromWindow =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : null;
+
+      const accessTokenFromParams =
+        fromWindow?.get("access_token") ?? searchParams.get("access_token");
+      const requestToken =
+        fromWindow?.get("request_token") ?? searchParams.get("request_token");
+
+      // If the access token arrives directly in the query string, treat as success
+      // (unusual path; normal Kite flow uses request_token + POST generate-token).
       if (accessTokenFromParams) {
         setSuccess(true);
         setIsLoading(false);
@@ -51,12 +60,14 @@ export default function ZerodhaRedirectPage() {
         return;
       }
 
+      // Single-flight: Zerodha request_token is one-time use; React Strict Mode
+      // would otherwise run this effect twice and burn the token on the second POST.
+      hasCalledGenerate.current = true;
+
       try {
         const response = await api.post(routes.zerodha.generateToken, {
           request_token: requestToken,
         });
-
-        if (ignore) return;
 
         if (isZerodhaApiError(response.data)) {
           setErrorMsg(response.data.message);
@@ -70,23 +81,17 @@ export default function ZerodhaRedirectPage() {
 
         setSuccess(true);
       } catch (error: unknown) {
-        if (ignore) return;
-
         const zerodhaError = extractZerodhaApiError(error);
         setErrorMsg(
           zerodhaError?.message ?? "Failed to generate a Zerodha access token."
         );
       } finally {
-        if (!ignore) setIsLoading(false);
+        setIsLoading(false);
       }
     };
 
-    resolveAccessToken();
-
-    return () => {
-      ignore = true;
-    };
-  }, [accessTokenFromParams, requestToken]);
+    void resolveAccessToken();
+  }, [searchParams]);
 
   return (
     <main className="min-h-screen bg-white px-6 py-12 text-slate-900 transition-colors duration-200 dark:bg-[#050511] dark:text-zinc-100">
@@ -144,5 +149,26 @@ export default function ZerodhaRedirectPage() {
         ) : null}
       </div>
     </main>
+  );
+}
+
+function RedirectFallback() {
+  return (
+    <main className="min-h-screen bg-white px-6 py-12 text-slate-900 transition-colors duration-200 dark:bg-[#050511] dark:text-zinc-100">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-[2rem] border border-slate-200 bg-white/85 p-8 shadow-sm backdrop-blur-xl dark:border-zinc-800/60 dark:bg-zinc-900/50">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+          <div className="h-5 w-5 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+          Loading redirect…
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function ZerodhaRedirectPage() {
+  return (
+    <Suspense fallback={<RedirectFallback />}>
+      <ZerodhaRedirectContent />
+    </Suspense>
   );
 }
