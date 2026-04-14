@@ -1,14 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { api, routes } from "../lib/api";
+
 type ZerodhaLoginPromptProps = {
   message: string;
-  loginUrl?: string;
 };
 
-export default function ZerodhaLoginPrompt({
-  message,
-  loginUrl,
-}: ZerodhaLoginPromptProps) {
+export default function ZerodhaLoginPrompt({ message }: ZerodhaLoginPromptProps) {
+  const [loginUrl, setLoginUrl] = useState<string | null>(null);
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<{ login_url: string | null }>(routes.zerodha.loginUrl)
+      .then((res) => setLoginUrl(res.data.login_url))
+      .catch(() => setLoginUrl(null))
+      .finally(() => setFetching(false));
+  }, []);
+
   return (
     <div className="rounded-2xl border border-orange-200 bg-orange-50/90 p-5 text-sm text-slate-700 shadow-sm dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-50">
       <p className="font-medium text-slate-900 dark:text-white">
@@ -16,7 +26,9 @@ export default function ZerodhaLoginPrompt({
       </p>
       <p className="mt-2 text-slate-600 dark:text-orange-100/80">{message}</p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        {loginUrl ? (
+        {fetching ? (
+          <div className="h-4 w-4 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+        ) : loginUrl ? (
           <a
             href={loginUrl}
             className="inline-flex items-center rounded-xl bg-orange-500 px-4 py-2 font-medium text-white transition-colors hover:bg-orange-600"
@@ -25,13 +37,14 @@ export default function ZerodhaLoginPrompt({
           </a>
         ) : (
           <span className="text-xs text-slate-500 dark:text-orange-100/70">
-            Zerodha login URL is not configured on the API server.
+            Zerodha API key is not yet configured. Add it in Settings first.
           </span>
         )}
-        <span className="text-xs text-slate-500 dark:text-orange-100/70">
-          After login, copy the token on `/trade/redirect`, paste it into
-          ` ZERODHA_ACCESS_TOKEN`, and restart the API service.
-        </span>
+        {loginUrl && (
+          <span className="text-xs text-slate-500 dark:text-orange-100/70">
+            After logging in you will be redirected back automatically.
+          </span>
+        )}
       </div>
     </div>
   );

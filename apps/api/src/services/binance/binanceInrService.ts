@@ -1,132 +1,116 @@
-import walletClient from "./wallet";
-import spotClient from "./spot";
-import { getCryptoPricesInr } from "../coingecko/prices";
+import { createWalletClient } from "./wallet.js";
+import { createSpotClient } from "./spot.js";
+import { getCryptoPricesInr } from "../coingecko/prices.js";
+import type { BinanceAssetInr, BinancePortfolioInr } from "../../dto/binance.dto.js";
+import redis from "../../db/redis.js";
 
-export interface BinanceAssetInr {
-  symbol: string;
-  quantity: number;
-  price_inr: number;
-  value_inr: number;
+export type { BinanceAssetInr, BinancePortfolioInr };
+
+type RawBalance = { asset: string; free: string; locked: string };
+type BalanceMap = Map<string, { free: number; locked: number }>;
+
+const CACHE_TTL_SECONDS = 60;
+
+/** Aggregates raw balance entries into a symbol → {free, locked} map, ignoring zero balances. */
+function extractAssets(items: RawBalance[]): BalanceMap {
+  const map: BalanceMap = new Map();
+  for (const item of items) {
+    const free = parseFloat(item.free) || 0;
+    const locked = parseFloat(item.locked) || 0;
+    if (free > 0 || locked > 0) {
+      const existing = map.get(item.asset) ?? { free: 0, locked: 0 };
+      map.set(item.asset, {
+        free: existing.free + free,
+        locked: existing.locked + locked,
+      });
+    }
+  }
+  return map;
 }
 
-export interface BinancePortfolioInr {
-  assets: BinanceAssetInr[];
-  total_inr: number;
-  funding: {
-    assets: BinanceAssetInr[];
-    total_inr: number;
-  };
-  spot: {
-    assets: BinanceAssetInr[];
-    total_inr: number;
-  };
+/** Converts a balance map to INR-valued asset list using the provided price lookup. */
+function toInrAssets(map: BalanceMap, prices: Record<string, number>): BinanceAssetInr[] {
+  return Array.from(map.entries())
+    .map(([symbol, { free, locked }]) => {
+      const quantity = free + locked;
+      const price_inr = prices[symbol.toUpperCase()] ?? 0;
+      return { symbol, quantity, price_inr, value_inr: quantity * price_inr };
+    })
+    .filter((a) => a.quantity > 0)
+    .sort((a, b) => b.value_inr - a.value_inr);
 }
 
-let cachedPortfolio: BinancePortfolioInr | null = null;
-let lastFetchTime = 0;
-let fetchPromise: Promise<BinancePortfolioInr> | null = null;
+function sumInr(assets: BinanceAssetInr[]): number {
+  return assets.reduce((sum, a) => sum + a.value_inr, 0);
+}
 
-const CACHE_TTL_MS = 60000; // 60 seconds
+/** In-flight fetches keyed by user so concurrent users never share one promise. */
+const fetchPromises = new Map<string, Promise<BinancePortfolioInr>>();
 
 /**
- * Fetches the Binance funding and spot wallet balances and converts each asset
- * to INR using live CoinGecko prices. Results are cached for 60 seconds.
+ * Fetches Binance funding and spot wallet balances for the given user and converts
+ * each asset to INR using live CoinGecko prices. Cached per-user in Redis for 60 seconds.
  */
-export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
-  const now = Date.now();
-  if (cachedPortfolio && now - lastFetchTime < CACHE_TTL_MS) {
-    return cachedPortfolio;
+export async function getBinancePortfolioInr(userId: string): Promise<BinancePortfolioInr> {
+  const cacheKey = `binance:inr:${userId}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached) as BinancePortfolioInr;
   }
 
-  if (fetchPromise) {
-    return fetchPromise;
+  let pending = fetchPromises.get(userId);
+  if (pending) {
+    return pending;
   }
 
-  fetchPromise = (async () => {
+  pending = (async () => {
     try {
-      const fundingResponse = await walletClient.restAPI.fundingWallet();
-      const spotResponse = await spotClient.restAPI.getAccount();
+      const [walletClient, spotClient] = await Promise.all([
+        createWalletClient(userId),
+        createSpotClient(userId),
+      ]);
 
-      const fundingRaw = await fundingResponse.data() as Array<{ asset: string; free: string; locked: string }>;
-      const spotData = await spotResponse.data() as { balances: Array<{ asset: string; free: string; locked: string }> };
-      const spotRaw = spotData.balances || [];
+      const [fundingResponse, spotResponse] = await Promise.all([
+        walletClient.restAPI.fundingWallet(),
+        spotClient.restAPI.getAccount(),
+      ]);
 
-      const extractAssets = (items: Array<{ asset: string; free: string; locked: string }>) => {
-        const map = new Map<string, { free: number; locked: number }>();
-        for (const item of items) {
-          const free = parseFloat(item.free) || 0;
-          const locked = parseFloat(item.locked) || 0;
-          if (free > 0 || locked > 0) {
-            const existing = map.get(item.asset) || { free: 0, locked: 0 };
-            map.set(item.asset, {
-              free: existing.free + free,
-              locked: existing.locked + locked,
-            });
-          }
-        }
-        return map;
-      };
+      const fundingRaw = (await fundingResponse.data()) as RawBalance[];
+      const spotData = (await spotResponse.data()) as { balances: RawBalance[] };
+      const spotRaw = spotData.balances ?? [];
 
       const fundingMap = extractAssets(fundingRaw);
       const spotMap = extractAssets(spotRaw);
 
-      const combinedMap = new Map<string, { free: number; locked: number }>();
-      for (const [asset, data] of fundingMap.entries()) {
-        combinedMap.set(asset, { free: data.free, locked: data.locked });
-      }
+      const combinedMap: BalanceMap = new Map(fundingMap);
       for (const [asset, data] of spotMap.entries()) {
-        const existing = combinedMap.get(asset) || { free: 0, locked: 0 };
+        const existing = combinedMap.get(asset) ?? { free: 0, locked: 0 };
         combinedMap.set(asset, {
           free: existing.free + data.free,
           locked: existing.locked + data.locked,
         });
       }
 
-      const symbols = Array.from(combinedMap.keys());
-      const prices = await getCryptoPricesInr(symbols);
+      const prices = await getCryptoPricesInr(Array.from(combinedMap.keys()));
 
-      const toInrAssets = (map: Map<string, { free: number; locked: number }>): BinanceAssetInr[] => {
-        return Array.from(map.entries())
-          .map(([symbol, { free, locked }]) => {
-            const qty = free + locked;
-            const price_inr = prices[symbol.toUpperCase()] ?? 0;
-            return {
-              symbol,
-              quantity: qty,
-              price_inr,
-              value_inr: qty * price_inr,
-            };
-          })
-          .filter(a => a.quantity > 0)
-          .sort((a, b) => b.value_inr - a.value_inr);
-      };
+      const fundingAssets = toInrAssets(fundingMap, prices);
+      const spotAssets = toInrAssets(spotMap, prices);
+      const combinedAssets = toInrAssets(combinedMap, prices);
 
-      const fundingAssets = toInrAssets(fundingMap);
-      const spotAssets = toInrAssets(spotMap);
-      const combinedAssets = toInrAssets(combinedMap);
-
-      const sumInr = (assets: BinanceAssetInr[]) => assets.reduce((sum, a) => sum + a.value_inr, 0);
-
-      const result = {
+      const result: BinancePortfolioInr = {
         assets: combinedAssets,
         total_inr: sumInr(combinedAssets),
-        funding: {
-          assets: fundingAssets,
-          total_inr: sumInr(fundingAssets),
-        },
-        spot: {
-          assets: spotAssets,
-          total_inr: sumInr(spotAssets),
-        }
+        funding: { assets: fundingAssets, total_inr: sumInr(fundingAssets) },
+        spot: { assets: spotAssets, total_inr: sumInr(spotAssets) },
       };
 
-      cachedPortfolio = result;
-      lastFetchTime = Date.now();
+      await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL_SECONDS);
       return result;
     } finally {
-      fetchPromise = null;
+      fetchPromises.delete(userId);
     }
   })();
 
-  return fetchPromise;
+  fetchPromises.set(userId, pending);
+  return pending;
 }

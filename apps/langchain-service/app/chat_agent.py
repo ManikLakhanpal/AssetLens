@@ -6,8 +6,7 @@ from typing import List
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 
-from .route_tools import TOOL_NAME_TO_PATH, assetlens_route_tools
-from .api_fetch import fetch_assetlens_get
+from .route_tools import assetlens_route_tools
 
 
 def _extract_text(ai: AIMessage) -> str:
@@ -29,7 +28,6 @@ def _tool_messages_for_ai_message(ai: AIMessage) -> List[ToolMessage]:
     out: List[ToolMessage] = []
     calls = getattr(ai, "tool_calls", None) or []
 
-    # Map tools by name for easy lookup
     tools_by_name = {t.name: t for t in assetlens_route_tools}
 
     for tc in calls:
@@ -40,7 +38,6 @@ def _tool_messages_for_ai_message(ai: AIMessage) -> List[ToolMessage]:
         tool = tools_by_name.get(name)
         if tool is not None:
             try:
-                # Call the LangChain tool directly with its args
                 payload = tool.invoke(args)
             except Exception as e:
                 payload = json.dumps({"error": "tool_execution_failed", "message": str(e)})

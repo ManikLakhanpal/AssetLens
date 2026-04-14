@@ -1,9 +1,7 @@
-import { Wallet } from '@binance/wallet';
+import { Wallet } from "@binance/wallet";
+import { getBinanceCredentialsForUser } from "./binanceCredentials.js";
 
-const configurationRestAPI = {
-    apiKey: process.env.BINANCE_API_KEY as string,
-    apiSecret: process.env.BINANCE_API_SECRET as string,
-};
-const walletClient = new Wallet({ configurationRestAPI });
-
-export default walletClient;
+export async function createWalletClient(userId: string): Promise<Wallet> {
+  const { apiKey, apiSecret } = await getBinanceCredentialsForUser(userId);
+  return new Wallet({ configurationRestAPI: { apiKey, apiSecret } });
+}

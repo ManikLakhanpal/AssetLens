@@ -1,9 +1,7 @@
-import { Spot } from '@binance/spot';
+import { Spot } from "@binance/spot";
+import { getBinanceCredentialsForUser } from "./binanceCredentials.js";
 
-const configurationRestAPI = {
-    apiKey: process.env.BINANCE_API_KEY as string,
-    apiSecret: process.env.BINANCE_API_SECRET as string,
-};
-const spotClient = new Spot({ configurationRestAPI });
-
-export default spotClient;
+export async function createSpotClient(userId: string): Promise<Spot> {
+  const { apiKey, apiSecret } = await getBinanceCredentialsForUser(userId);
+  return new Spot({ configurationRestAPI: { apiKey, apiSecret } });
+}

@@ -1,20 +1,32 @@
-import kiteClient from "./kite";
+import { createKiteClient, createKiteConnectForSessionExchange } from "./kite.js";
+import prisma from "../../db/prisma.js";
+import { decrypt } from "../auth/cryptoService.js";
+import type {
+  ZerodhaServiceError,
+  ZerodhaOrderVariety,
+  ZerodhaOrderExchange,
+  ZerodhaOrderType,
+  PlaceZerodhaOrderInput,
+} from "../../dto/zerodha.dto.js";
 
-export type ZerodhaServiceError = {
-  success: false;
-  code: "AUTH_REQUIRED" | "ZERODHA_ERROR";
-  message: string;
-  login_url?: string;
+export type {
+  ZerodhaServiceError,
+  ZerodhaOrderVariety,
+  ZerodhaOrderExchange,
+  ZerodhaOrderType,
+  PlaceZerodhaOrderInput,
 };
 
-function getZerodhaLoginUrl() {
-  const apiKey = process.env.ZERODHA_API_KEY;
-
-  if (!apiKey) {
-    return null;
-  }
-
-  return `https://kite.zerodha.com/connect/login?v=3&api_key=${process.env.ZERODHA_API_KEY}`;
+/**
+ * Reads the Zerodha API key from DB for the given user and returns the Kite login URL.
+ * Used by the /zerodha/login-url endpoint so the frontend can show a login button
+ * without relying on the ZERODHA_API_KEY env var (which is no longer used).
+ */
+export async function fetchZerodhaKiteLoginUrl(userId: string): Promise<string | null> {
+  const creds = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
+  if (!creds) return null;
+  const apiKey = decrypt(creds.apiKey);
+  return `https://kite.zerodha.com/connect/login?v=3&api_key=${apiKey}`;
 }
 
 function normalizeErrorMessage(error: unknown): string {
@@ -35,10 +47,7 @@ function normalizeErrorMessage(error: unknown): string {
 function isAuthError(message: string) {
   const m = message.toLowerCase();
 
-  if (
-    m.includes("incorrect") &&
-    (m.includes("api_key") || m.includes("access_token"))
-  ) {
+  if (m.includes("incorrect") && (m.includes("api_key") || m.includes("access_token"))) {
     return true;
   }
 
@@ -57,10 +66,7 @@ function isAuthError(message: string) {
   ].some((fragment) => m.includes(fragment));
 }
 
-function buildZerodhaServiceError(
-  error: unknown,
-  fallbackMessage: string
-): ZerodhaServiceError {
+function buildZerodhaServiceError(error: unknown, fallbackMessage: string): ZerodhaServiceError {
   const raw = normalizeErrorMessage(error);
   const message = raw || fallbackMessage;
   const code = isAuthError(message) ? "AUTH_REQUIRED" : "ZERODHA_ERROR";
@@ -69,92 +75,102 @@ function buildZerodhaServiceError(
     success: false,
     code,
     message,
-    login_url: code === "AUTH_REQUIRED" ? getZerodhaLoginUrl() ?? undefined : undefined,
   };
 }
 
 // * Generate access token from request token
-export async function generateAccessToken(requestToken: string) {
+export async function generateAccessToken(requestToken: string, userId: string) {
   try {
-    const apiSecret = process.env.ZERODHA_API_SECRET as string;
+    const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
+    if (!zerodha) throw new Error("Zerodha credentials not found");
+
+    const apiSecret = decrypt(zerodha.apiSecret);
+    // Must not use createKiteClient here: it requires an existing access token,
+    // but this flow is how we obtain the first token after Kite redirect.
+    const kiteClient = await createKiteConnectForSessionExchange(userId);
+
     const session = await kiteClient.generateSession(requestToken, apiSecret);
-    // Update the in-memory client so subsequent calls use the new token
-    kiteClient.setAccessToken(session.access_token);
     return {
       access_token: session.access_token,
       user_id: session.user_id,
       login_time: session.login_time,
     };
   } catch (error) {
-    const serviceError = buildZerodhaServiceError(
-      error,
-      "Failed to generate Zerodha access token"
-    );
+    const serviceError = buildZerodhaServiceError(error, "Failed to generate Zerodha access token");
     console.error("generateAccessToken error:", serviceError.message);
-
     return serviceError;
   }
 }
 
 // * Zerodha User Profile
-export async function getZerodhaProfile() {
+export async function getZerodhaProfile(userId: string) {
   try {
+    const kiteClient = await createKiteClient(userId);
     const profile = await kiteClient.getProfile();
     return profile;
   } catch (error) {
-    const serviceError = buildZerodhaServiceError(
-      error,
-      "Failed to fetch Zerodha profile"
-    );
+    const serviceError = buildZerodhaServiceError(error, "Failed to fetch Zerodha profile");
     console.error("getZerodhaProfile error:", serviceError.message);
-
     return serviceError;
   }
 }
 
 // * Zerodha Stock Holdings
-export async function getZerodhaHoldings() {
+export async function getZerodhaHoldings(userId: string) {
   try {
+    const kiteClient = await createKiteClient(userId);
     const holdings = await kiteClient.getHoldings();
     return holdings;
   } catch (error) {
-    const serviceError = buildZerodhaServiceError(
-      error,
-      "Failed to fetch Zerodha holdings"
-    );
+    const serviceError = buildZerodhaServiceError(error, "Failed to fetch Zerodha holdings");
     console.error("getZerodhaHoldings error:", serviceError.message);
-
     return serviceError;
   }
 }
 
-export async function getZerodhaMFHoldings() {
+// * Zerodha Mutual Fund Holdings
+export async function getZerodhaMFHoldings(userId: string) {
   try {
+    const kiteClient = await createKiteClient(userId);
     const holdings = await kiteClient.getMFHoldings();
     return holdings;
   } catch (error) {
-    const serviceError = buildZerodhaServiceError(
-      error,
-      "Failed to fetch Zerodha holdings"
-    );
-    console.error("getZerodhaHoldings error:", serviceError.message);
-
+    const serviceError = buildZerodhaServiceError(error, "Failed to fetch Zerodha MF holdings");
+    console.error("getZerodhaMFHoldings error:", serviceError.message);
     return serviceError;
   }
 }
 
-
-export async function getZerodhaMFSIPs() {
+// * Zerodha Mutual Fund SIPs
+export async function getZerodhaMFSIPs(userId: string) {
   try {
-    const holdings = await kiteClient.getMFSIPS();
-    return holdings;
+    const kiteClient = await createKiteClient(userId);
+    const sips = await kiteClient.getMFSIPS();
+    return sips;
   } catch (error) {
-    const serviceError = buildZerodhaServiceError(
-      error,
-      "Failed to fetch Zerodha holdings"
-    );
-    console.error("getZerodhaHoldings error:", serviceError.message);
+    const serviceError = buildZerodhaServiceError(error, "Failed to fetch Zerodha MF SIPs");
+    console.error("getZerodhaMFSIPs error:", serviceError.message);
+    return serviceError;
+  }
+}
 
+// * Place a Zerodha Equity Market Order
+export async function placeZerodhaOrder(order: PlaceZerodhaOrderInput, userId: string) {
+  try {
+    const kiteClient = await createKiteClient(userId);
+    const result = await kiteClient.placeOrder(order.variety, {
+      exchange: order.exchange,
+      tradingsymbol: order.tradingsymbol,
+      transaction_type: order.orderType,
+      quantity: Number(order.qty),
+      product: "CNC",
+      order_type: "MARKET",
+      market_protection: 2,
+    } as any);
+    return result;
+  } catch (error) {
+    const serviceError = buildZerodhaServiceError(error, "Failed to place Zerodha order");
+    console.error("placeZerodhaOrder error:", serviceError.message);
     return serviceError;
   }
 }
