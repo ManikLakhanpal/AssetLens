@@ -1,11 +1,11 @@
-import { getPortfolioSummary, getPortfolioAssets } from "./portfolioSummaryService";
+import { getPortfolioSummary, getPortfolioAssets } from "./portfolioSummaryService.js";
 import {
   getZerodhaProfile,
   getZerodhaHoldings,
   getZerodhaMFHoldings,
   getZerodhaMFSIPs,
-} from "../zerodha/zerodhaService";
-import { getBinancePortfolioInr } from "../binance/binanceInrService";
+} from "../zerodha/zerodhaService.js";
+import { getBinancePortfolioInr } from "../binance/binanceInrService.js";
 
 async function tryAwait<T>(fn: () => Promise<T>): Promise<T | undefined> {
   try {
@@ -15,13 +15,13 @@ async function tryAwait<T>(fn: () => Promise<T>): Promise<T | undefined> {
   }
 }
 
-export async function collectPortfolioSnapshot() {
-  const portfolioSummary = await tryAwait(() => getPortfolioSummary());
-  const portfolioAssets = await tryAwait(() => getPortfolioAssets());
-  const zerodhaProfile = await getZerodhaProfile();
-  const zerodhaHoldings = await getZerodhaHoldings();
-  const mfHoldings = await getZerodhaMFHoldings();
-  const mfSips = await getZerodhaMFSIPs();
+export async function collectPortfolioSnapshot(userId: string) {
+  const portfolioSummary = await tryAwait(() => getPortfolioSummary(userId));
+  const portfolioAssets = await tryAwait(() => getPortfolioAssets(userId));
+  const zerodhaProfile = await getZerodhaProfile(userId);
+  const zerodhaHoldings = await getZerodhaHoldings(userId);
+  const mfHoldings = await getZerodhaMFHoldings(userId);
+  const mfSips = await getZerodhaMFSIPs(userId);
   const binancePortfolio = await tryAwait(() => getBinancePortfolioInr());
 
   return {

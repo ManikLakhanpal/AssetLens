@@ -9,7 +9,7 @@ const router = Router();
 router.post("/portfolio-summary", async (req, res) => {
   try {
     const model = (req.body?.model as Model | undefined) ?? "chatgpt";
-    const snapshot = await collectPortfolioSnapshot();
+    const snapshot = await collectPortfolioSnapshot(req.userId);
 
     const data = await fastApiClient.summarize({
       snapshot,
@@ -39,7 +39,7 @@ router.post("/chat", async (req, res) => {
 
     const history = (req.body?.history ?? []) as ChatMessage[];
 
-    const snapshot = await collectPortfolioSnapshot();
+    const snapshot = await collectPortfolioSnapshot(req.userId);
     const portfolio_context_markdown = buildPortfolioContextMarkdown(snapshot);
 
     const data = await fastApiClient.chat({
