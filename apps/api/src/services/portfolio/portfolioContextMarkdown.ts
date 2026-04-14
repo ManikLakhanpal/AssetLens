@@ -1,7 +1,6 @@
-import type { PortfolioSummary, AssetSlice } from "./portfolioSummaryService";
-import type { BinancePortfolioInr, BinanceAssetInr } from "../binance/binanceInrService";
-
-type ZerodhaServiceError = { success: false; message: string; code?: string };
+import type { PortfolioSummary, AssetSlice, PortfolioSnapshotInput } from "../../dto/portfolio.dto";
+import type { BinancePortfolioInr, BinanceAssetInr } from "../../dto/binance.dto";
+import type { ZerodhaServiceError } from "../../dto/zerodha.dto";
 
 function isZerodhaError(v: unknown): v is ZerodhaServiceError {
   return (
@@ -33,16 +32,7 @@ function binanceRows(assets: BinanceAssetInr[]): string {
   return header + body + "\n";
 }
 
-/** Snapshot shape produced by collectPortfolioSnapshot() */
-export type PortfolioSnapshotInput = {
-  portfolioSummary?: PortfolioSummary;
-  portfolioAssets?: { assets: AssetSlice[]; total_inr: number };
-  zerodhaProfile: unknown;
-  zerodhaHoldings: unknown;
-  mfHoldings: unknown;
-  mfSips: unknown;
-  binancePortfolio?: BinancePortfolioInr;
-};
+export type { PortfolioSnapshotInput };
 
 export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput): string {
   const parts: string[] = [];
@@ -51,7 +41,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
     "_Data below matches what the AssetLens dashboard aggregates. Use it as the source of truth for holdings, quantities, and values._\n"
   );
 
-  // —— Exchange totals (stocks + crypto pie; MF added where we compute) ——
+  // --- Exchange totals ---
   const { portfolioSummary, portfolioAssets } = snapshot;
   let mfTotalInr = 0;
   if (!isZerodhaError(snapshot.mfHoldings) && Array.isArray(snapshot.mfHoldings)) {
@@ -84,7 +74,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
     parts.push("### Per-asset slices\n_No assets above ₹10 threshold._\n");
   }
 
-  // —— Zerodha profile ——
+  // --- Zerodha profile ---
   const zp = snapshot.zerodhaProfile;
   if (isZerodhaError(zp)) {
     parts.push("### Zerodha profile\n");
@@ -105,7 +95,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
     parts.push("### Zerodha profile\n_Unknown or missing._\n");
   }
 
-  // —— Zerodha equities ——
+  // --- Zerodha stock holdings ---
   const zh = snapshot.zerodhaHoldings;
   if (isZerodhaError(zh)) {
     parts.push("### Zerodha stock holdings\n");
@@ -127,7 +117,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
     parts.push("### Zerodha stock holdings\n_No equity positions or empty._\n");
   }
 
-  // —— MF holdings ——
+  // --- Mutual fund holdings ---
   const mf = snapshot.mfHoldings;
   if (isZerodhaError(mf)) {
     parts.push("### Mutual fund holdings\n");
@@ -149,7 +139,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
     parts.push("### Mutual fund holdings\n_No MF positions or empty._\n");
   }
 
-  // —— MF SIPs ——
+  // --- Mutual fund SIPs ---
   const sips = snapshot.mfSips;
   if (isZerodhaError(sips)) {
     parts.push("### Mutual fund SIPs\n");
@@ -169,7 +159,7 @@ export function buildPortfolioContextMarkdown(snapshot: PortfolioSnapshotInput):
     parts.push("### Mutual fund SIPs\n_No SIPs or empty._\n");
   }
 
-  // —— Binance ——
+  // --- Binance crypto ---
   const b = snapshot.binancePortfolio;
   if (!b) {
     parts.push("### Binance (crypto)\n_Unavailable (failed to load or not connected)._");

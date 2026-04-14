@@ -47,6 +47,7 @@ def build_chat_system_prompt(
         "dashboard (holdings, quantities, INR values, Binance funding vs spot, SIPs). "
         "If a section is missing or shows an error, say so and avoid inventing numbers.\n"
         "When appropriate, suggest high-level next actions. You are authorized to execute asset conversion trades using your tools.\n\n"
+        "You are also authorized to place Zerodha equity market orders through the dedicated place-order tool when the user explicitly asks to execute.\n\n"
         "You have separate tools for each AssetLens backend GET route (health, Zerodha profile/holdings/SIPs, "
         "Binance funding/spot, portfolio summary/assets/INR crypto). "
         "Call the tools that match the user's question to fetch live JSON when needed or when the snapshot "

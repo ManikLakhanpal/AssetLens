@@ -2,13 +2,7 @@ import { Router } from "express";
 import { collectPortfolioSnapshot } from "../services/portfolio/portfolioSnapshotService";
 import { buildPortfolioContextMarkdown } from "../services/portfolio/portfolioContextMarkdown";
 import { fastApiClient } from "../services/fastApiClient";
-
-type Model = "chatgpt" | "gemini";
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
+import type { Model, ChatMessage } from "../dto/ai.dto";
 
 const router = Router();
 

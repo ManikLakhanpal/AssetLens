@@ -1,10 +1,18 @@
 import kiteClient from "./kite";
+import type {
+  ZerodhaServiceError,
+  ZerodhaOrderVariety,
+  ZerodhaOrderExchange,
+  ZerodhaOrderType,
+  PlaceZerodhaOrderInput,
+} from "../../dto/zerodha.dto";
 
-export type ZerodhaServiceError = {
-  success: false;
-  code: "AUTH_REQUIRED" | "ZERODHA_ERROR";
-  message: string;
-  login_url?: string;
+export type {
+  ZerodhaServiceError,
+  ZerodhaOrderVariety,
+  ZerodhaOrderExchange,
+  ZerodhaOrderType,
+  PlaceZerodhaOrderInput,
 };
 
 function getZerodhaLoginUrl() {
@@ -128,6 +136,7 @@ export async function getZerodhaHoldings() {
   }
 }
 
+// * Zerodha Mutual Fund Holdings
 export async function getZerodhaMFHoldings() {
   try {
     const holdings = await kiteClient.getMFHoldings();
@@ -135,25 +144,49 @@ export async function getZerodhaMFHoldings() {
   } catch (error) {
     const serviceError = buildZerodhaServiceError(
       error,
-      "Failed to fetch Zerodha holdings"
+      "Failed to fetch Zerodha MF holdings"
     );
-    console.error("getZerodhaHoldings error:", serviceError.message);
+    console.error("getZerodhaMFHoldings error:", serviceError.message);
 
     return serviceError;
   }
 }
 
-
+// * Zerodha Mutual Fund SIPs
 export async function getZerodhaMFSIPs() {
   try {
-    const holdings = await kiteClient.getMFSIPS();
-    return holdings;
+    const sips = await kiteClient.getMFSIPS();
+    return sips;
   } catch (error) {
     const serviceError = buildZerodhaServiceError(
       error,
-      "Failed to fetch Zerodha holdings"
+      "Failed to fetch Zerodha MF SIPs"
     );
-    console.error("getZerodhaHoldings error:", serviceError.message);
+    console.error("getZerodhaMFSIPs error:", serviceError.message);
+
+    return serviceError;
+  }
+}
+
+// * Place a Zerodha Equity Market Order
+export async function placeZerodhaOrder(order: PlaceZerodhaOrderInput) {
+  try {
+    const result = await kiteClient.placeOrder(order.variety, {
+      exchange: order.exchange,
+      tradingsymbol: order.tradingsymbol,
+      transaction_type: order.orderType,
+      quantity: Number(order.qty),
+      product: "CNC",
+      order_type: "MARKET",
+      market_protection: 2
+    } as any);
+    return result;
+  } catch (error) {
+    const serviceError = buildZerodhaServiceError(
+      error,
+      "Failed to place Zerodha order"
+    );
+    console.error("placeZerodhaOrder error:", serviceError.message);
 
     return serviceError;
   }

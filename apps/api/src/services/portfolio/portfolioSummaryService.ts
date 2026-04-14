@@ -1,17 +1,8 @@
 import { getBinancePortfolioInr } from "../binance/binanceInrService";
 import { getZerodhaHoldings } from "../zerodha/zerodhaService";
+import type { PortfolioSummary, AssetSlice } from "../../dto/portfolio.dto";
 
-export interface PortfolioSummary {
-  binance_inr: number;
-  zerodha_inr: number;
-  total_inr: number;
-}
-
-export interface AssetSlice {
-  name: string;
-  value: number;
-  exchange: "Binance" | "Zerodha";
-}
+export type { PortfolioSummary, AssetSlice };
 
 /**
  * Fetches Binance and Zerodha values sequentially and returns
