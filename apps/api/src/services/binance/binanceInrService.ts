@@ -1,12 +1,16 @@
-import walletClient from "./wallet";
-import spotClient from "./spot";
-import { getCryptoPricesInr } from "../coingecko/prices";
-import type { BinanceAssetInr, BinancePortfolioInr } from "../../dto/binance.dto";
+import { createWalletClient } from "./wallet.js";
+import { createSpotClient } from "./spot.js";
+import { getCryptoPricesInr } from "../coingecko/prices.js";
+import type { BinanceAssetInr, BinancePortfolioInr } from "../../dto/binance.dto.js";
+import redis from "../../db/redis.js";
 
 export type { BinanceAssetInr, BinancePortfolioInr };
 
 type RawBalance = { asset: string; free: string; locked: string };
 type BalanceMap = Map<string, { free: number; locked: number }>;
+
+const CACHE_KEY = "binance:inr";
+const CACHE_TTL_SECONDS = 60;
 
 /** Aggregates raw balance entries into a symbol → {free, locked} map, ignoring zero balances. */
 function extractAssets(items: RawBalance[]): BalanceMap {
@@ -26,10 +30,7 @@ function extractAssets(items: RawBalance[]): BalanceMap {
 }
 
 /** Converts a balance map to INR-valued asset list using the provided price lookup. */
-function toInrAssets(
-  map: BalanceMap,
-  prices: Record<string, number>
-): BinanceAssetInr[] {
+function toInrAssets(map: BalanceMap, prices: Record<string, number>): BinanceAssetInr[] {
   return Array.from(map.entries())
     .map(([symbol, { free, locked }]) => {
       const quantity = free + locked;
@@ -44,20 +45,16 @@ function sumInr(assets: BinanceAssetInr[]): number {
   return assets.reduce((sum, a) => sum + a.value_inr, 0);
 }
 
-let cachedPortfolio: BinancePortfolioInr | null = null;
-let lastFetchTime = 0;
 let fetchPromise: Promise<BinancePortfolioInr> | null = null;
-
-const CACHE_TTL_MS = 60_000;
 
 /**
  * Fetches Binance funding and spot wallet balances and converts each asset
- * to INR using live CoinGecko prices. Results are cached for 60 seconds.
+ * to INR using live CoinGecko prices. Results are cached in Redis for 60 seconds.
  */
 export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
-  const now = Date.now();
-  if (cachedPortfolio && now - lastFetchTime < CACHE_TTL_MS) {
-    return cachedPortfolio;
+  const cached = await redis.get(CACHE_KEY);
+  if (cached) {
+    return JSON.parse(cached) as BinancePortfolioInr;
   }
 
   if (fetchPromise) {
@@ -66,6 +63,11 @@ export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
 
   fetchPromise = (async () => {
     try {
+      const [walletClient, spotClient] = await Promise.all([
+        createWalletClient(),
+        createSpotClient(),
+      ]);
+
       const [fundingResponse, spotResponse] = await Promise.all([
         walletClient.restAPI.fundingWallet(),
         spotClient.restAPI.getAccount(),
@@ -100,8 +102,7 @@ export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
         spot: { assets: spotAssets, total_inr: sumInr(spotAssets) },
       };
 
-      cachedPortfolio = result;
-      lastFetchTime = Date.now();
+      await redis.set(CACHE_KEY, JSON.stringify(result), "EX", CACHE_TTL_SECONDS);
       return result;
     } finally {
       fetchPromise = null;

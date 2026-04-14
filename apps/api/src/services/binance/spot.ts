@@ -1,9 +1,27 @@
-import { Spot } from '@binance/spot';
+import { Spot } from "@binance/spot";
+import redis from "../../db/redis.js";
+import prisma from "../../db/prisma.js";
+import { decrypt } from "../auth/cryptoService.js";
 
-const configurationRestAPI = {
-    apiKey: process.env.BINANCE_API_KEY as string,
-    apiSecret: process.env.BINANCE_API_SECRET as string,
-};
-const spotClient = new Spot({ configurationRestAPI });
+async function getBinanceCredentials(): Promise<{ apiKey: string; apiSecret: string }> {
+  const cached = await redis.get("binance:credentials");
+  if (cached) {
+    return JSON.parse(cached) as { apiKey: string; apiSecret: string };
+  }
 
-export default spotClient;
+  const creds = await prisma.binanceCredentials.findFirst();
+  if (!creds) throw new Error("Binance credentials not found in database");
+
+  const result = {
+    apiKey: decrypt(creds.apiKey),
+    apiSecret: decrypt(creds.apiSecret),
+  };
+
+  await redis.set("binance:credentials", JSON.stringify(result), "EX", 3600);
+  return result;
+}
+
+export async function createSpotClient(): Promise<Spot> {
+  const { apiKey, apiSecret } = await getBinanceCredentials();
+  return new Spot({ configurationRestAPI: { apiKey, apiSecret } });
+}

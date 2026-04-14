@@ -1,5 +1,5 @@
-import walletClient from "./wallet";
-import spotClient from "./spot";
+import { createWalletClient } from "./wallet.js";
+import { createSpotClient } from "./spot.js";
 
 type BinanceRequestError = {
   response?: { data?: { msg?: string } };
@@ -14,6 +14,7 @@ function extractErrorMessage(error: unknown): string {
 // * Funding Wallet Balance
 export async function fundingWalletBalance() {
   try {
+    const walletClient = await createWalletClient();
     const response = await walletClient.restAPI.fundingWallet();
     console.log("fundingWallet() rate limits:", response.rateLimits!);
     const data = await response.data();
@@ -30,6 +31,7 @@ export async function convertAsset(symbol: string, side: "BUY" | "SELL", amount:
   try {
     // quoteOrderQty denominates `amount` in the quote asset (e.g. USDT) for both sides:
     // BUY spends `amount` of quote; SELL receives `amount` of quote.
+    const spotClient = await createSpotClient();
     const response = await spotClient.restAPI.newOrder({
       symbol,
       side: side as any,
@@ -48,6 +50,7 @@ export async function convertAsset(symbol: string, side: "BUY" | "SELL", amount:
 // * API Key Permissions
 export async function permissions() {
   try {
+    const walletClient = await createWalletClient();
     const response = await walletClient.restAPI.getApiKeyPermission();
     console.log("permissions() rate limits:", response.rateLimits!);
     const data = await response.data();
@@ -59,10 +62,10 @@ export async function permissions() {
   }
 }
 
-
 // * Spot Account Information
 export async function spotAccountInfo() {
   try {
+    const spotClient = await createSpotClient();
     const response = await spotClient.restAPI.getAccount();
     console.log("spotAccountInfo() rate limits:", response.rateLimits!);
     const data = await response.data();
@@ -77,6 +80,7 @@ export async function spotAccountInfo() {
 // * Universal Asset Transfer (Spot ↔ Funding)
 export async function transferAsset(type: "MAIN_FUNDING" | "FUNDING_MAIN", asset: string, amount: number) {
   try {
+    const walletClient = await createWalletClient();
     const response = await walletClient.restAPI.userUniversalTransfer({ type, asset, amount });
     console.log("transferAsset() rate limits:", response.rateLimits!);
     const data = await response.data();
