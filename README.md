@@ -4,9 +4,10 @@ AssetLens is a multi-service portfolio platform for tracking Binance and Zerodha
 
 ## Features
 
-- Unified dashboard across Binance and Zerodha portfolios.
-- Zerodha profile, equity holdings, mutual fund holdings, and SIP visibility.
-- Portfolio allocation visualizations (exchange + asset level).
+- **Accounts:** Sign up, log in, JWT sessions, and a Settings page to store Binance and Zerodha API credentials (encrypted at rest in PostgreSQL).
+- Unified dashboard across Binance and Zerodha portfolios (data scoped per logged-in user).
+- Zerodha profile, equity holdings, mutual fund holdings, SIP visibility, Kite login redirect, and daily session token storage.
+- Portfolio allocation visualizations (exchange + asset level), including Binance INR aggregation.
 - FastAPI + LangChain AI service with ChatGPT and Gemini model selection.
 - Floating chat widget with automatic portfolio summary on open, rendering rich **Markdown**, with a seamless full-screen mode.
 - Butter-smooth UI transitions and element enter animations powered by **GSAP**.
@@ -16,6 +17,8 @@ AssetLens is a multi-service portfolio platform for tracking Binance and Zerodha
 ```mermaid
 flowchart LR
   Web["apps/web (Next.js)"] --> Api["apps/api (Express)"]
+  Api --> Pg["PostgreSQL (Prisma)"]
+  Api --> Redis["Redis (cache)"]
   Api --> FastApi["apps/langchain-service (FastAPI + LangChain)"]
   FastApi --> LLM["OpenAI / Gemini"]
   Api --> Binance["Binance APIs"]
@@ -26,8 +29,8 @@ flowchart LR
 
 ```text
 apps/
-  api/                # Express API for portfolio + broker integrations
-  web/                # Next.js frontend dashboard
+  api/                # Express API: auth, portfolio, broker integrations, AI proxy
+  web/                # Next.js frontend dashboard + auth pages
   langchain-service/  # FastAPI service for LLM summarization/chat
 ```
 
@@ -36,9 +39,9 @@ See app-specific docs in [`apps/README.md`](apps/README.md).
 ## Tech Stack
 
 - **Frontend:** Next.js 16, React 19, Tailwind CSS, Recharts, GSAP, React Markdown, Axios
-- **API:** Node.js, Express, TypeScript, Axios
+- **API:** Node.js, Express, TypeScript, Prisma 7 (PostgreSQL), Redis (ioredis), JWT, AES-256-GCM for secrets
 - **AI Service:** Python, FastAPI, LangChain, LangChain OpenAI, LangChain Google GenAI
-- **Integrations:** Binance Wallet API, Zerodha Kite Connect
+- **Integrations:** Binance Wallet / Spot APIs, Zerodha Kite Connect
 
 ## Quick Start
 
@@ -47,6 +50,7 @@ See app-specific docs in [`apps/README.md`](apps/README.md).
 - Node.js 20+ and npm
 - Python 3.11+
 - `uv` (Python package manager)
+- **PostgreSQL** and **Redis** (local or Docker) for `apps/api`
 
 ### 1) Start LangChain service
 
@@ -61,6 +65,8 @@ uv run --env-file .env uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```bash
 cd apps/api
 npm install
+cp .env.example .env   # then edit DATABASE_URL, REDIS_URL, JWT_SECRET, ENCRYPTION_KEY
+npx prisma migrate dev  # first-time DB setup
 npm run dev
 ```
 
@@ -72,7 +78,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. Create an account, add broker keys in **Settings**, complete Zerodha Kite login when prompted (`/trade/redirect`).
 
 ## Environment Variables
 
@@ -85,24 +91,40 @@ Use these templates:
 ### Required keys by service
 
 - **apps/api**
-  - Binance + Zerodha keys
+  - `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`
   - `PORT` (default `4000`)
   - `FASTAPI_BASE_URL` (default `http://localhost:8000`)
+  - Optional: `ZERODHA_ACCESS_TOKEN` fallback before DB-stored daily token
+  - Binance and Zerodha **API keys are stored per user in the database** (not required in `.env` for normal operation)
 - **apps/web**
   - `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`)
 - **apps/langchain-service**
   - `OPENAI_API_KEY` and/or `GEMINI_API_KEY`
 
-## API Overview
-Please refer to 'Requestly.json' at the root of this project for API endpoint information.
+## Authentication
 
-### Portfolio
+- **Public:** `POST /auth/register`, `POST /auth/login`, `GET /health`
+- **Protected (Bearer JWT):** all other API routes, including `/binance/*`, `/zerodha/*`, `/portfolio/*`, `/ai/*`
+- The web app stores the JWT in `localStorage` and sends `Authorization: Bearer <token>` on API requests.
+
+## API Overview
+
+See [`Requestly.json`](Requestly.json) at the repo root for detailed request examples. Summary below.
+
+### Auth
+
+- `POST /auth/register` — create user (username + password)
+- `POST /auth/login` — returns JWT
+- `GET /auth/me` — profile + flags for saved credentials
+- `PUT /auth/credentials` — upsert encrypted Binance and/or Zerodha API keys
+
+### Portfolio (JWT required)
 
 - `GET /portfolio/summary`
 - `GET /portfolio/assets`
 - `GET /portfolio/binance/inr-value`
 
-### Binance
+### Binance (JWT required)
 
 - `GET /binance/funding-account-data`
 - `GET /binance/spot-account-data`
@@ -110,26 +132,26 @@ Please refer to 'Requestly.json' at the root of this project for API endpoint in
 - `POST /binance/convert`
 - `POST /binance/transfer`
 
-### Zerodha
+### Zerodha (JWT required)
 
+- `GET /zerodha/login-url` — Kite login URL from stored API key
 - `GET /zerodha/profile`
 - `GET /zerodha/stock-holdings-data`
 - `GET /zerodha/mf-holdings-data`
 - `GET /zerodha/mf-sips`
-- `POST /zerodha/generate-token`
+- `POST /zerodha/generate-token` — exchange `request_token` (body), persist access token
+- `POST /zerodha/place-order` — place equity order (validated body)
 
-### AI (Node proxy)
+### AI (Node proxy, JWT required)
 
 - `POST /ai/portfolio-summary`
 - `POST /ai/chat`
 
 ## AI Chat Flow
 
-- Frontend chat widget calls Node `/ai/*` routes.
-- Node API collects portfolio snapshot and forwards to FastAPI.
-- FastAPI invokes LangChain with selected model:
-  - `chatgpt` via `langchain-openai`
-  - `gemini` via `langchain-google-genai`
+- Frontend chat widget calls Node `/ai/*` routes with the user JWT.
+- Node API builds a portfolio snapshot for **that user** and forwards to FastAPI.
+- FastAPI invokes LangChain with the selected model (`chatgpt` / `gemini`).
 
 ## Quality Checks
 
@@ -149,10 +171,12 @@ cd apps/web && npx tsc --noEmit
 - **Gemini not working:** set `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) in `apps/langchain-service/.env`.
 - **OpenAI not working:** set `OPENAI_API_KEY` in `apps/langchain-service/.env`.
 - **Frontend cannot reach API:** ensure `NEXT_PUBLIC_API_URL` points to API host/port.
+- **401 on broker routes:** log in on the web app; add keys in Settings; for Zerodha, complete Kite login so the daily access token exists.
+- **Wrong user’s data:** ensure you are logged in as the intended account; broker and portfolio caches are keyed by `userId`.
 
 ## Contributing
 
-Contributions are welcome. Keep changes scoped, update docs for behavior/env changes, and run type checks before opening a PR.
+Contributions are welcome. Keep changes scoped, update docs for behavior or env changes, and run type checks before opening a PR.
 
 ## Future Plans
 
@@ -160,6 +184,5 @@ Contributions are welcome. Keep changes scoped, update docs for behavior/env cha
 - Add historical portfolio snapshots and time-series P&L analytics.
 - Add alerts for SIP events and allocation drift thresholds.
 - Improve AI context management with snapshot caching and conversation memory controls.
-- Add user authentication and multi-account support.
 - Improve deployment reliability with Docker Compose and CI/CD workflows.
 - Expand automated test coverage for API integration and UI flows.
