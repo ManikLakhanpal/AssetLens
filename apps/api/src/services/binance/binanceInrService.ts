@@ -9,7 +9,6 @@ export type { BinanceAssetInr, BinancePortfolioInr };
 type RawBalance = { asset: string; free: string; locked: string };
 type BalanceMap = Map<string, { free: number; locked: number }>;
 
-const CACHE_KEY = "binance:inr";
 const CACHE_TTL_SECONDS = 60;
 
 /** Aggregates raw balance entries into a symbol → {free, locked} map, ignoring zero balances. */
@@ -45,27 +44,30 @@ function sumInr(assets: BinanceAssetInr[]): number {
   return assets.reduce((sum, a) => sum + a.value_inr, 0);
 }
 
-let fetchPromise: Promise<BinancePortfolioInr> | null = null;
+/** In-flight fetches keyed by user so concurrent users never share one promise. */
+const fetchPromises = new Map<string, Promise<BinancePortfolioInr>>();
 
 /**
- * Fetches Binance funding and spot wallet balances and converts each asset
- * to INR using live CoinGecko prices. Results are cached in Redis for 60 seconds.
+ * Fetches Binance funding and spot wallet balances for the given user and converts
+ * each asset to INR using live CoinGecko prices. Cached per-user in Redis for 60 seconds.
  */
-export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
-  const cached = await redis.get(CACHE_KEY);
+export async function getBinancePortfolioInr(userId: string): Promise<BinancePortfolioInr> {
+  const cacheKey = `binance:inr:${userId}`;
+  const cached = await redis.get(cacheKey);
   if (cached) {
     return JSON.parse(cached) as BinancePortfolioInr;
   }
 
-  if (fetchPromise) {
-    return fetchPromise;
+  let pending = fetchPromises.get(userId);
+  if (pending) {
+    return pending;
   }
 
-  fetchPromise = (async () => {
+  pending = (async () => {
     try {
       const [walletClient, spotClient] = await Promise.all([
-        createWalletClient(),
-        createSpotClient(),
+        createWalletClient(userId),
+        createSpotClient(userId),
       ]);
 
       const [fundingResponse, spotResponse] = await Promise.all([
@@ -102,12 +104,13 @@ export async function getBinancePortfolioInr(): Promise<BinancePortfolioInr> {
         spot: { assets: spotAssets, total_inr: sumInr(spotAssets) },
       };
 
-      await redis.set(CACHE_KEY, JSON.stringify(result), "EX", CACHE_TTL_SECONDS);
+      await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL_SECONDS);
       return result;
     } finally {
-      fetchPromise = null;
+      fetchPromises.delete(userId);
     }
   })();
 
-  return fetchPromise;
+  fetchPromises.set(userId, pending);
+  return pending;
 }
