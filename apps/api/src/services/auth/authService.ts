@@ -148,4 +148,8 @@ export async function saveCredentials(
   if (input.binance || input.zerodha) {
     await redis.del(`portfolio:summary:${userId}`, `portfolio:assets:${userId}`);
   }
+
+  if (input.binance) {
+    await redis.del(`binance:inr:${userId}`, `binance:credentials:${userId}`);
+  }
 }
