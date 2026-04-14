@@ -9,6 +9,7 @@ import ZerodhaProfile from "./components/ZerodhaProfile";
 import ZerodhaHoldings from "./components/ZerodhaHoldings";
 import MutualFundSips from "./components/MutualFundSips";
 import PortfolioPieChart from "./components/PortfolioPieChart";
+import AuthGuard from "./components/AuthGuard";
 
 type Filter = "all" | "binance" | "zerodha";
 
@@ -40,6 +41,7 @@ export default function Dashboard() {
   }, { scope: mainRef });
 
   return (
+    <AuthGuard>
     <div className="relative min-h-screen bg-white dark:bg-[#050511] text-slate-900 dark:text-zinc-100 selection:bg-teal-500/30 font-sans overflow-hidden transition-colors duration-200">
       {/* Background Gradients — dark mode only */}
       <div className="hidden dark:block absolute top-[-20%] left-[-10%] w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-80 blur-[80px] pointer-events-none" />
@@ -98,5 +100,6 @@ export default function Dashboard() {
         )}
       </main>
     </div>
+    </AuthGuard>
   );
 }
