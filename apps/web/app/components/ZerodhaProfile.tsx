@@ -13,8 +13,6 @@ import {
 export default function ZerodhaProfile() {
   const [profile, setProfile] = useState<ZerodhaProfileResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [loginUrl, setLoginUrl] = useState<string | null>(null);
-  const [authRequired, setAuthRequired] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,31 +22,18 @@ export default function ZerodhaProfile() {
 
         if (isZerodhaApiError(response.data)) {
           setErrorMsg(response.data.message);
-          setLoginUrl(response.data.login_url ?? null);
-          setAuthRequired(response.data.code === "AUTH_REQUIRED");
           return;
         }
 
         if (!isZerodhaProfileResponse(response.data)) {
           setErrorMsg("Received an invalid Zerodha profile response.");
-          setAuthRequired(false);
           return;
         }
 
         setProfile(response.data);
-        setAuthRequired(false);
       } catch (error: unknown) {
         const zerodhaError = extractZerodhaApiError(error);
-
-        if (zerodhaError) {
-          setErrorMsg(zerodhaError.message);
-          setLoginUrl(zerodhaError.login_url ?? null);
-          setAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
-          return;
-        }
-
-        setErrorMsg("Failed to fetch Zerodha profile");
-        setAuthRequired(false);
+        setErrorMsg(zerodhaError?.message ?? "Failed to fetch Zerodha profile");
       } finally {
         setLoading(false);
       }
@@ -75,14 +60,7 @@ export default function ZerodhaProfile() {
           <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : errorMsg ? (
-        loginUrl || authRequired ? (
-          <ZerodhaLoginPrompt
-            message={errorMsg}
-            loginUrl={loginUrl ?? undefined}
-          />
-        ) : (
-          <div className="text-red-500 dark:text-red-400 text-sm">{errorMsg}</div>
-        )
+        <ZerodhaLoginPrompt message={errorMsg} />
       ) : profile ? (
         <div className="flex flex-col gap-4">
           {/* Avatar + Name */}

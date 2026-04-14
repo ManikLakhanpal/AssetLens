@@ -30,11 +30,6 @@ export default function ZerodhaHoldings() {
 
   const [stocksErrorMsg, setStocksErrorMsg] = useState<string | null>(null);
   const [mfErrorMsg, setMfErrorMsg] = useState<string | null>(null);
-
-  const [loginUrl, setLoginUrl] = useState<string | null>(null);
-  const [authRequired, setAuthRequired] = useState(false);
-  const [mfAuthRequired, setMfAuthRequired] = useState(false);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,26 +44,15 @@ export default function ZerodhaHoldings() {
           const data = stocksRes.value.data;
           if (isZerodhaApiError(data)) {
             setStocksErrorMsg(data.message);
-            setLoginUrl(data.login_url ?? null);
-            setAuthRequired(data.code === "AUTH_REQUIRED");
           } else if (Array.isArray(data)) {
             setHoldings(data.filter(isZerodhaHolding));
             setStocksErrorMsg(null);
-            setAuthRequired(false);
           } else {
             setStocksErrorMsg("Received an invalid Zerodha holdings response.");
-            setAuthRequired(false);
           }
         } else {
           const zerodhaError = extractZerodhaApiError(stocksRes.reason);
-          if (zerodhaError) {
-            setStocksErrorMsg(zerodhaError.message);
-            setLoginUrl(zerodhaError.login_url ?? null);
-            setAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
-          } else {
-            setStocksErrorMsg("Failed to fetch Zerodha holdings");
-            setAuthRequired(false);
-          }
+          setStocksErrorMsg(zerodhaError?.message ?? "Failed to fetch Zerodha holdings");
         }
 
         // Mutual funds
@@ -76,37 +60,19 @@ export default function ZerodhaHoldings() {
           const data = mfRes.value.data;
           if (isZerodhaApiError(data)) {
             setMfErrorMsg(data.message);
-            setLoginUrl(data.login_url ?? null);
-            setMfAuthRequired(data.code === "AUTH_REQUIRED");
           } else if (Array.isArray(data)) {
             setMfHoldings(data.filter(isZerodhaMFHolding));
             setMfErrorMsg(null);
-            setMfAuthRequired(false);
           } else {
             setMfErrorMsg("Received an invalid mutual fund holdings response.");
-            setMfAuthRequired(false);
           }
         } else {
           const zerodhaError = extractZerodhaApiError(mfRes.reason);
-          if (zerodhaError) {
-            setMfErrorMsg(zerodhaError.message);
-            setLoginUrl(zerodhaError.login_url ?? null);
-            setMfAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
-          } else {
-            setMfErrorMsg("Failed to fetch mutual fund holdings");
-            setMfAuthRequired(false);
-          }
+          setMfErrorMsg(zerodhaError?.message ?? "Failed to fetch mutual fund holdings");
         }
       } catch (error: unknown) {
         const zerodhaError = extractZerodhaApiError(error);
-        if (zerodhaError) {
-          setStocksErrorMsg(zerodhaError.message);
-          setLoginUrl(zerodhaError.login_url ?? null);
-          setAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
-        } else {
-          setStocksErrorMsg("Failed to fetch Zerodha holdings");
-          setAuthRequired(false);
-        }
+        setStocksErrorMsg(zerodhaError?.message ?? "Failed to fetch Zerodha holdings");
       } finally {
         setLoading(false);
       }
@@ -119,8 +85,9 @@ export default function ZerodhaHoldings() {
     mfHoldings.reduce((sum, h) => sum + h.pnl, 0);
   const isProfitable = totalPnl >= 0;
 
-  const showAuthPrompt = loginUrl && (authRequired || mfAuthRequired);
-  const promptMsg = authRequired ? stocksErrorMsg : mfErrorMsg;
+  // Show the login prompt when either data set failed to load
+  const anyError = stocksErrorMsg ?? mfErrorMsg;
+  const promptMsg = stocksErrorMsg ?? mfErrorMsg;
 
   return (
     <div className="flex flex-col gap-6 p-6 rounded-3xl bg-white/80 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800/50 backdrop-blur-xl shadow-sm dark:shadow-none transition-all hover:bg-white dark:hover:bg-zinc-900/60 hover:border-slate-300 dark:hover:border-zinc-700/50">
@@ -137,7 +104,7 @@ export default function ZerodhaHoldings() {
       </div>
 
       {/* Total P&L summary */}
-      {!loading && !showAuthPrompt && holdings.length + mfHoldings.length > 0 && (
+      {!loading && !anyError && holdings.length + mfHoldings.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-100 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-700/30">
           <span className="text-slate-500 dark:text-zinc-400 text-sm">Total P&amp;L</span>
           <span className={`text-sm font-semibold tabular-nums ${isProfitable ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
@@ -150,8 +117,8 @@ export default function ZerodhaHoldings() {
         <div className="flex items-center justify-center py-12">
           <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : showAuthPrompt ? (
-        <ZerodhaLoginPrompt message={promptMsg ?? "Authentication required"} loginUrl={loginUrl ?? undefined} />
+      ) : anyError ? (
+        <ZerodhaLoginPrompt message={promptMsg ?? "Zerodha session needs to be refreshed."} />
       ) : (
         <div className="flex flex-col gap-6">
           {/* Stocks */}

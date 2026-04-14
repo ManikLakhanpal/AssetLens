@@ -24,9 +24,6 @@ export default function MutualFundSips() {
   const [sips, setSips] = useState<ZerodhaMFSip[]>([]);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [loginUrl, setLoginUrl] = useState<string | null>(null);
-  const [authRequired, setAuthRequired] = useState(false);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,31 +34,19 @@ export default function MutualFundSips() {
 
         if (isZerodhaApiError(response.data)) {
           setErrorMsg(response.data.message);
-          setLoginUrl(response.data.login_url ?? null);
-          setAuthRequired(response.data.code === "AUTH_REQUIRED");
           return;
         }
 
         if (!Array.isArray(response.data)) {
           setErrorMsg("Received an invalid mutual fund SIPs response.");
-          setAuthRequired(false);
           return;
         }
 
         setSips(response.data.filter(isZerodhaMFSip));
         setErrorMsg(null);
-        setAuthRequired(false);
       } catch (error: unknown) {
         const zerodhaError = extractZerodhaApiError(error);
-        if (zerodhaError) {
-          setErrorMsg(zerodhaError.message);
-          setLoginUrl(zerodhaError.login_url ?? null);
-          setAuthRequired(zerodhaError.code === "AUTH_REQUIRED");
-          return;
-        }
-
-        setErrorMsg("Failed to fetch mutual fund SIPs");
-        setAuthRequired(false);
+        setErrorMsg(zerodhaError?.message ?? "Failed to fetch mutual fund SIPs");
       } finally {
         setLoading(false);
       }
@@ -116,10 +101,8 @@ export default function MutualFundSips() {
         <div className="flex items-center justify-center py-12">
           <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : authRequired && (loginUrl ?? errorMsg) ? (
-        <ZerodhaLoginPrompt message={errorMsg ?? "Authentication required"} loginUrl={loginUrl ?? undefined} />
       ) : errorMsg ? (
-        <div className="text-red-500 dark:text-red-400 text-sm">{errorMsg}</div>
+        <ZerodhaLoginPrompt message={errorMsg} />
       ) : visibleSips.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
