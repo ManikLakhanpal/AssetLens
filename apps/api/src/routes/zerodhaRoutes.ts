@@ -6,10 +6,12 @@ import {
   fetchZerodhaMFHoldings,
   fetchZerodhaMFSIPs,
   createZerodhaOrder,
-} from "../controllers/zerodhaController";
+  fetchZerodhaLoginUrl,
+} from "../controllers/zerodhaController.js";
 
 const router = Router();
 
+router.get("/login-url", fetchZerodhaLoginUrl);
 router.get("/profile", fetchZerodhaProfile);
 router.get("/stock-holdings-data", fetchZerodhaHoldings);
 router.get("/mf-holdings-data", fetchZerodhaMFHoldings);

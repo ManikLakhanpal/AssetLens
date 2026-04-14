@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { ZerodhaServiceError, PlaceZerodhaOrderInput } from "../dto/zerodha.dto";
+import type { ZerodhaServiceError, PlaceZerodhaOrderInput } from "../dto/zerodha.dto.js";
 import {
   getZerodhaProfile,
   getZerodhaHoldings,
@@ -7,7 +7,11 @@ import {
   getZerodhaMFHoldings,
   getZerodhaMFSIPs,
   placeZerodhaOrder,
-} from "../services/zerodha/zerodhaService";
+  fetchZerodhaKiteLoginUrl,
+} from "../services/zerodha/zerodhaService.js";
+import prisma from "../db/prisma.js";
+import redis from "../db/redis.js";
+import { encrypt } from "../services/auth/cryptoService.js";
 
 function isZerodhaServiceError(data: unknown): data is ZerodhaServiceError {
   return Boolean(
@@ -29,9 +33,9 @@ function sendZerodhaResponse(res: Response, data: unknown) {
   res.json(data);
 }
 
-export async function fetchZerodhaProfile(_req: Request, res: Response) {
+export async function fetchZerodhaProfile(req: Request, res: Response) {
   try {
-    const data = await getZerodhaProfile();
+    const data = await getZerodhaProfile(req.userId);
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -39,9 +43,9 @@ export async function fetchZerodhaProfile(_req: Request, res: Response) {
   }
 }
 
-export async function fetchZerodhaHoldings(_req: Request, res: Response) {
+export async function fetchZerodhaHoldings(req: Request, res: Response) {
   try {
-    const data = await getZerodhaHoldings();
+    const data = await getZerodhaHoldings(req.userId);
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -49,9 +53,9 @@ export async function fetchZerodhaHoldings(_req: Request, res: Response) {
   }
 }
 
-export async function fetchZerodhaMFHoldings(_req: Request, res: Response) {
+export async function fetchZerodhaMFHoldings(req: Request, res: Response) {
   try {
-    const data = await getZerodhaMFHoldings();
+    const data = await getZerodhaMFHoldings(req.userId);
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -59,9 +63,9 @@ export async function fetchZerodhaMFHoldings(_req: Request, res: Response) {
   }
 }
 
-export async function fetchZerodhaMFSIPs(_req: Request, res: Response) {
+export async function fetchZerodhaMFSIPs(req: Request, res: Response) {
   try {
-    const data = await getZerodhaMFSIPs();
+    const data = await getZerodhaMFSIPs(req.userId);
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -77,8 +81,22 @@ export async function generateZerodhaToken(req: Request, res: Response) {
       res.status(400).json({ error: "request_token is required" });
       return;
     }
-    
-    const data = await generateAccessToken(request_token);
+
+    const data = await generateAccessToken(request_token, req.userId);
+
+    if (!isZerodhaServiceError(data)) {
+      const encryptedToken = encrypt(data.access_token);
+
+      // Save to the logged-in user's credentials row
+      await prisma.zerodhaCredentials.updateMany({
+        where: { userId: req.userId },
+        data: { accessToken: encryptedToken },
+      });
+
+      // Cache per-user in Redis; kite.ts decrypts it on read
+      await redis.set(`zerodha:access_token:${req.userId}`, encryptedToken, "EX", 86400);
+    }
+
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -147,10 +165,20 @@ export async function createZerodhaOrder(req: Request, res: Response) {
       return;
     }
 
-    const data = await placeZerodhaOrder(orderInput);
+    const data = await placeZerodhaOrder(orderInput, req.userId);
     sendZerodhaResponse(res, data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({ error: message });
+  }
+}
+
+export async function fetchZerodhaLoginUrl(req: Request, res: Response): Promise<void> {
+  try {
+    const login_url = await fetchZerodhaKiteLoginUrl(req.userId);
+    res.json({ login_url });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch login URL";
     res.status(500).json({ error: message });
   }
 }

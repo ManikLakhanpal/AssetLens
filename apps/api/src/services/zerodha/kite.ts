@@ -1,9 +1,41 @@
 import { KiteConnect } from "kiteconnect";
+import type { Connect } from "kiteconnect";
+import redis from "../../db/redis.js";
+import prisma from "../../db/prisma.js";
+import { decrypt } from "../auth/cryptoService.js";
 
-const kiteClient = new KiteConnect({
-  api_key: process.env.ZERODHA_API_KEY as string,
-});
+/**
+ * Returns a KiteConnect client scoped to the given user.
+ * Access token is sourced from Redis first (fast path), then decrypted from DB.
+ * Falls back to the env var during initial setup before any token has been stored.
+ */
+export async function createKiteClient(userId: string): Promise<Connect> {
+  const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
+  if (!zerodha) throw new Error("Zerodha credentials not found in database");
 
-kiteClient.setAccessToken(process.env.ZERODHA_ACCESS_TOKEN as string);
+  const apiKey = decrypt(zerodha.apiKey);
+  const client = new KiteConnect({ api_key: apiKey });
 
-export default kiteClient;
+  const redisKey = `zerodha:access_token:${userId}`;
+
+  const cachedToken = await redis.get(redisKey);
+  if (cachedToken) {
+    client.setAccessToken(decrypt(cachedToken));
+    return client;
+  }
+
+  if (zerodha.accessToken) {
+    const token = decrypt(zerodha.accessToken);
+    await redis.set(redisKey, zerodha.accessToken, "EX", 86400);
+    client.setAccessToken(token);
+    return client;
+  }
+
+  const envToken = process.env.ZERODHA_ACCESS_TOKEN;
+  if (envToken) {
+    client.setAccessToken(envToken);
+    return client;
+  }
+
+  throw new Error("Zerodha daily token not configured. Generate it via /zerodha/generate-token.");
+}
