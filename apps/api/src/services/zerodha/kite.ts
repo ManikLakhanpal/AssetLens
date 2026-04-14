@@ -5,6 +5,19 @@ import prisma from "../../db/prisma.js";
 import { decrypt } from "../auth/cryptoService.js";
 
 /**
+ * Kite client with only api_key — no access token set.
+ * Required for `generateSession(request_token, api_secret)` on first login
+ * (createKiteClient would throw before any daily token exists).
+ */
+export async function createKiteConnectForSessionExchange(userId: string): Promise<Connect> {
+  const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
+  if (!zerodha) throw new Error("Zerodha credentials not found in database");
+
+  const apiKey = decrypt(zerodha.apiKey);
+  return new KiteConnect({ api_key: apiKey });
+}
+
+/**
  * Returns a KiteConnect client scoped to the given user.
  * Access token is sourced from Redis first (fast path), then decrypted from DB.
  * Falls back to the env var during initial setup before any token has been stored.

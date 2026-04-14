@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../../db/prisma.js";
+import redis from "../../db/redis.js";
 import { encrypt, decrypt } from "./cryptoService.js";
 import type { MeResponse, SaveCredentialsInput } from "../../dto/auth.dto.js";
 
@@ -142,5 +143,9 @@ export async function saveCredentials(
         apiSecret: encrypt(input.zerodha.apiSecret),
       },
     });
+  }
+
+  if (input.binance || input.zerodha) {
+    await redis.del(`portfolio:summary:${userId}`, `portfolio:assets:${userId}`);
   }
 }

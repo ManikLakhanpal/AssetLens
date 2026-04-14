@@ -1,4 +1,4 @@
-import { createKiteClient } from "./kite.js";
+import { createKiteClient, createKiteConnectForSessionExchange } from "./kite.js";
 import prisma from "../../db/prisma.js";
 import { decrypt } from "../auth/cryptoService.js";
 import type {
@@ -81,11 +81,13 @@ function buildZerodhaServiceError(error: unknown, fallbackMessage: string): Zero
 // * Generate access token from request token
 export async function generateAccessToken(requestToken: string, userId: string) {
   try {
-    const kiteClient = await createKiteClient(userId);
     const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
     if (!zerodha) throw new Error("Zerodha credentials not found");
 
     const apiSecret = decrypt(zerodha.apiSecret);
+    // Must not use createKiteClient here: it requires an existing access token,
+    // but this flow is how we obtain the first token after Kite redirect.
+    const kiteClient = await createKiteConnectForSessionExchange(userId);
 
     const session = await kiteClient.generateSession(requestToken, apiSecret);
     return {

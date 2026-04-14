@@ -95,6 +95,9 @@ export async function generateZerodhaToken(req: Request, res: Response) {
 
       // Cache per-user in Redis; kite.ts decrypts it on read
       await redis.set(`zerodha:access_token:${req.userId}`, encryptedToken, "EX", 86400);
+
+      // Drop stale portfolio aggregates (they may have cached zerodha_inr=0 before token existed)
+      await redis.del(`portfolio:summary:${req.userId}`, `portfolio:assets:${req.userId}`);
     }
 
     sendZerodhaResponse(res, data);
