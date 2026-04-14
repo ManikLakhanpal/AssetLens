@@ -2,9 +2,9 @@ import type { Request, Response } from "express";
 import { getBinancePortfolioInr } from "../services/binance/binanceInrService.js";
 import { getPortfolioSummary, getPortfolioAssets } from "../services/portfolio/portfolioSummaryService.js";
 
-export async function fetchBinanceInrValue(_req: Request, res: Response) {
+export async function fetchBinanceInrValue(req: Request, res: Response) {
   try {
-    const data = await getBinancePortfolioInr();
+    const data = await getBinancePortfolioInr(req.userId);
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";

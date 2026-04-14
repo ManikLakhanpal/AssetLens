@@ -12,9 +12,9 @@ function extractErrorMessage(error: unknown): string {
 }
 
 // * Funding Wallet Balance
-export async function fundingWalletBalance() {
+export async function fundingWalletBalance(userId: string) {
   try {
-    const walletClient = await createWalletClient();
+    const walletClient = await createWalletClient(userId);
     const response = await walletClient.restAPI.fundingWallet();
     console.log("fundingWallet() rate limits:", response.rateLimits!);
     const data = await response.data();
@@ -27,11 +27,14 @@ export async function fundingWalletBalance() {
 }
 
 // * Convert Asset (Spot Market Order)
-export async function convertAsset(symbol: string, side: "BUY" | "SELL", amount: number) {
+export async function convertAsset(
+  userId: string,
+  symbol: string,
+  side: "BUY" | "SELL",
+  amount: number
+) {
   try {
-    // quoteOrderQty denominates `amount` in the quote asset (e.g. USDT) for both sides:
-    // BUY spends `amount` of quote; SELL receives `amount` of quote.
-    const spotClient = await createSpotClient();
+    const spotClient = await createSpotClient(userId);
     const response = await spotClient.restAPI.newOrder({
       symbol,
       side: side as any,
@@ -48,9 +51,9 @@ export async function convertAsset(symbol: string, side: "BUY" | "SELL", amount:
 }
 
 // * API Key Permissions
-export async function permissions() {
+export async function permissions(userId: string) {
   try {
-    const walletClient = await createWalletClient();
+    const walletClient = await createWalletClient(userId);
     const response = await walletClient.restAPI.getApiKeyPermission();
     console.log("permissions() rate limits:", response.rateLimits!);
     const data = await response.data();
@@ -63,9 +66,9 @@ export async function permissions() {
 }
 
 // * Spot Account Information
-export async function spotAccountInfo() {
+export async function spotAccountInfo(userId: string) {
   try {
-    const spotClient = await createSpotClient();
+    const spotClient = await createSpotClient(userId);
     const response = await spotClient.restAPI.getAccount();
     console.log("spotAccountInfo() rate limits:", response.rateLimits!);
     const data = await response.data();
@@ -78,9 +81,14 @@ export async function spotAccountInfo() {
 }
 
 // * Universal Asset Transfer (Spot ↔ Funding)
-export async function transferAsset(type: "MAIN_FUNDING" | "FUNDING_MAIN", asset: string, amount: number) {
+export async function transferAsset(
+  userId: string,
+  type: "MAIN_FUNDING" | "FUNDING_MAIN",
+  asset: string,
+  amount: number
+) {
   try {
-    const walletClient = await createWalletClient();
+    const walletClient = await createWalletClient(userId);
     const response = await walletClient.restAPI.userUniversalTransfer({ type, asset, amount });
     console.log("transferAsset() rate limits:", response.rateLimits!);
     const data = await response.data();

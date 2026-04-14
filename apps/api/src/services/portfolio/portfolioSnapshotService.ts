@@ -22,7 +22,7 @@ export async function collectPortfolioSnapshot(userId: string) {
   const zerodhaHoldings = await getZerodhaHoldings(userId);
   const mfHoldings = await getZerodhaMFHoldings(userId);
   const mfSips = await getZerodhaMFSIPs(userId);
-  const binancePortfolio = await tryAwait(() => getBinancePortfolioInr());
+  const binancePortfolio = await tryAwait(() => getBinancePortfolioInr(userId));
 
   return {
     portfolioSummary,

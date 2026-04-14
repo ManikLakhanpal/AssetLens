@@ -20,7 +20,7 @@ export async function getPortfolioSummary(userId: string): Promise<PortfolioSumm
 
   let binanceData: Awaited<ReturnType<typeof getBinancePortfolioInr>> | undefined;
   try {
-    binanceData = await getBinancePortfolioInr();
+    binanceData = await getBinancePortfolioInr(userId);
   } catch {
     binanceData = undefined;
   }
@@ -59,7 +59,7 @@ export async function getPortfolioAssets(userId: string): Promise<{
 
   let binanceData: Awaited<ReturnType<typeof getBinancePortfolioInr>> | undefined;
   try {
-    binanceData = await getBinancePortfolioInr();
+    binanceData = await getBinancePortfolioInr(userId);
   } catch {
     binanceData = undefined;
   }

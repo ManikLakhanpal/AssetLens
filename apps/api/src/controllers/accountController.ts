@@ -1,15 +1,15 @@
 import type { Request, Response } from "express";
-import { 
+import {
   fundingWalletBalance,
   spotAccountInfo,
   convertAsset,
   permissions,
-  transferAsset
-} from "../services/binance/accountService";
+  transferAsset,
+} from "../services/binance/accountService.js";
 
-export async function fetchFundingWalletBalance(_req: Request, res: Response) {
+export async function fetchFundingWalletBalance(req: Request, res: Response) {
   try {
-    const data = await fundingWalletBalance();
+    const data = await fundingWalletBalance(req.userId);
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -26,7 +26,7 @@ export async function convertAssetHandler(req: Request, res: Response): Promise<
       return;
     }
 
-    const data = await convertAsset(symbol, side, Number(amount));
+    const data = await convertAsset(req.userId, symbol, side, Number(amount));
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -34,9 +34,9 @@ export async function convertAssetHandler(req: Request, res: Response): Promise<
   }
 }
 
-export async function fetchPermissions(_req: Request, res: Response) {
+export async function fetchPermissions(req: Request, res: Response) {
   try {
-    const data = await permissions();
+    const data = await permissions(req.userId);
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -44,9 +44,9 @@ export async function fetchPermissions(_req: Request, res: Response) {
   }
 }
 
-export async function fetchSpotAccountInfo(_req: Request, res: Response) {
+export async function fetchSpotAccountInfo(req: Request, res: Response) {
   try {
-    const data = await spotAccountInfo();
+    const data = await spotAccountInfo(req.userId);
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
@@ -63,7 +63,7 @@ export async function transferAssetHandler(req: Request, res: Response): Promise
       return;
     }
 
-    const data = await transferAsset(type, asset, Number(amount));
+    const data = await transferAsset(req.userId, type, asset, Number(amount));
     res.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
