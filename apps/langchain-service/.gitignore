@@ -5,15 +5,23 @@
 
 # Python virtual environment
 .venv/
+venv/
+ENV/
 
 # Python bytecode/cache
 __pycache__/
 *.py[cod]
+*.so
+.Python
 
 # Tool caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.pyre/
 
-# Local OS artifacts
-.DS_Store
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
