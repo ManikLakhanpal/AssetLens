@@ -1,13 +1,13 @@
-# LangChain Service (`apps/langchain-service`)
+# 🤖 LangChain Service (`apps/langchain-service`)
 
 FastAPI + LangChain service used by the Node API (`apps/api`) for:
 
-- **`POST /summarize`:** Portfolio snapshot → natural language summary (model: `chatgpt` or `gemini`).
-- **`POST /chat`:** Chat completion with tools that map to **AssetLens Node API** routes (GET portfolio/Binance/Zerodha, POST convert/transfer/place-order, etc.).
+- 📝 **`POST /summarize`:** Portfolio snapshot → natural language summary (model: `chatgpt` or `gemini`).
+- 💬 **`POST /chat`:** Chat completion with tools that map to **AssetLens Node API** routes (GET portfolio/Binance/Zerodha, POST convert/transfer/place-order, etc.).
 
 The Node `/ai/*` handlers run **after** JWT authentication and pass a **per-user** portfolio snapshot into FastAPI, so summaries and chat context reflect the logged-in account.
 
-## Endpoints
+## 📡 Endpoints
 
 ### `POST /summarize`
 
@@ -52,7 +52,7 @@ Output:
 }
 ```
 
-## Environment variables
+## 🔑 Environment Variables
 
 Use [`.env.example`](.env.example) as template.
 
@@ -68,11 +68,11 @@ Use [`.env.example`](.env.example) as template.
 - `OPENAI_TEMPERATURE` (default `0.2`)
 - `GEMINI_TEMPERATURE` (default `0.2`)
 
-**Node API bridge** (for tool HTTP calls to `apps/api`):
+**🔗 Node API bridge** (for tool HTTP calls to `apps/api`):
 
 - `ASSETLENS_API_BASE_URL` — base URL for Node tool HTTP calls (`app/config.py`, default `http://localhost:4000`).
 
-## Local development
+## 🚀 Local Development
 
 ```bash
 cd apps/langchain-service
@@ -89,6 +89,6 @@ set +a
 uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-## Tooling note
+## 🔧 Tooling Note
 
 Allowlisted Node routes used by LangChain tools are defined in `app/api_fetch.py` (GET/POST path sets). Portfolio chart data is exposed as a single tool hitting `GET /portfolio/data` (replacing separate summary/assets GETs). New protected broker routes on the Node API may need matching allowlist updates if tools should call them.
