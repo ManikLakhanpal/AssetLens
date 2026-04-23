@@ -3,6 +3,7 @@ import type { BinancePortfolioInr } from "./binance.dto";
 export interface PortfolioSummary {
   binance_inr: number;
   zerodha_inr: number;
+  zerodha_mf_inr: number;
   total_inr: number;
 }
 
