@@ -1,5 +1,5 @@
 import { getBinancePortfolioInr } from "../binance/binanceInrService.js";
-import { getZerodhaHoldings } from "../zerodha/zerodhaService.js";
+import { getZerodhaHoldings, getZerodhaMFHoldings } from "../zerodha/zerodhaService.js";
 import type { PortfolioSummary, AssetSlice } from "../../dto/portfolio.dto.js";
 import redis from "../../db/redis.js";
 
@@ -26,21 +26,22 @@ export async function getPortfolioSummary(userId: string): Promise<PortfolioSumm
   }
 
   const zerodhaHoldings = await getZerodhaHoldings(userId);
+  const zerodhaMFHoldings = await getZerodhaMFHoldings(userId);
 
   const binance_inr = binanceData?.total_inr ?? 0;
   const zerodha_inr = Array.isArray(zerodhaHoldings)
     ? zerodhaHoldings.reduce((sum, h) => sum + h.quantity * h.last_price, 0)
     : 0;
-
+  const zerodha_mf_inr = Array.isArray(zerodhaMFHoldings)
+    ? zerodhaMFHoldings.reduce((sum, h) => sum + h.quantity * h.last_price, 0)
+    : 0;
   const result: PortfolioSummary = {
     binance_inr,
     zerodha_inr,
-    total_inr: binance_inr + zerodha_inr,
+    zerodha_mf_inr,    
+    total_inr: binance_inr + zerodha_inr + zerodha_mf_inr,
   };
-
-  if (Array.isArray(zerodhaHoldings)) {
-    await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL);
-  }
+  await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL);
   return result;
 }
 

@@ -17,6 +17,7 @@ import { isZerodhaMFHolding, type ZerodhaMFHolding } from "../lib/zerodha";
 interface PortfolioSummary {
   binance_inr: number;
   zerodha_inr: number;
+  zerodha_mf_inr: number;
   total_inr: number;
 }
 
@@ -174,7 +175,7 @@ export default function PortfolioPieChart() {
           Portfolio Split
           {total > 0 && (
             <span className="ml-1 text-slate-500 dark:text-zinc-400 font-normal text-base">
-              · <span className="text-slate-800 dark:text-white font-semibold">{formatInr(total)}</span>
+              · <span className="text-slate-800 dark:text-white font-semibold">{formatInr(summaryData?.total_inr ?? 0)}</span>
             </span>
           )}
         </h2>
