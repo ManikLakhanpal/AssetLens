@@ -13,7 +13,7 @@ const CACHE_TTL = 60;
  * If Zerodha holdings fail (non-array service error), the result is not cached
  * so a later successful session is not masked by zeros for 60s.
  */
-export async function getPortfolioSummary(userId: string): Promise<PortfolioSummary> {
+export async function getPortfolioSummary(userId: string) {
   const cacheKey = `portfolio:summary:${userId}`;
   const cached = await redis.get(cacheKey);
   if (cached) return JSON.parse(cached) as PortfolioSummary;
@@ -50,10 +50,7 @@ export async function getPortfolioSummary(userId: string): Promise<PortfolioSumm
  * sorted by value descending. Filters out assets worth less than ₹10.
  * Results are cached in Redis for 60 seconds when Zerodha equity loads successfully.
  */
-export async function getPortfolioAssets(userId: string): Promise<{
-  assets: AssetSlice[];
-  total_inr: number;
-}> {
+export async function getPortfolioAssets(userId: string) {
   const cacheKey = `portfolio:assets:${userId}`;
   const cached = await redis.get(cacheKey);
   if (cached) return JSON.parse(cached) as { assets: AssetSlice[]; total_inr: number };

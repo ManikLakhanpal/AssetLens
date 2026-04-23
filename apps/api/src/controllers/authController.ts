@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { login, register, getMe, saveCredentials } from "../services/auth/authService.js";
 import type { LoginInput, SignupInput, AuthResponse, SaveCredentialsInput } from "../dto/auth.dto.js";
 
-export async function registerHandler(req: Request, res: Response): Promise<void> {
+export async function registerHandler(req: Request, res: Response) {
   const { username, password } = req.body as Partial<SignupInput>;
 
   if (!username || !password) {
@@ -25,7 +25,7 @@ export async function registerHandler(req: Request, res: Response): Promise<void
   }
 }
 
-export async function meHandler(req: Request, res: Response): Promise<void> {
+export async function meHandler(req: Request, res: Response) {
   try {
     const me = await getMe(req.userId);
     res.json(me);
@@ -35,7 +35,7 @@ export async function meHandler(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function saveCredentialsHandler(req: Request, res: Response): Promise<void> {
+export async function saveCredentialsHandler(req: Request, res: Response) {
   const input = req.body as Partial<SaveCredentialsInput>;
 
   const hasBinance =
@@ -69,7 +69,7 @@ export async function saveCredentialsHandler(req: Request, res: Response): Promi
   }
 }
 
-export async function loginHandler(req: Request, res: Response): Promise<void> {
+export async function loginHandler(req: Request, res: Response) {
   const { username, password } = req.body as Partial<LoginInput>;
 
   if (!username || !password) {

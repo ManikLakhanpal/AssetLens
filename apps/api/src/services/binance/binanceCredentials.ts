@@ -8,7 +8,7 @@ import { decrypt } from "../auth/cryptoService.js";
  */
 export async function getBinanceCredentialsForUser(
   userId: string
-): Promise<{ apiKey: string; apiSecret: string }> {
+) {
   const cacheKey = `binance:credentials:${userId}`;
   const cached = await redis.get(cacheKey);
   if (cached) {

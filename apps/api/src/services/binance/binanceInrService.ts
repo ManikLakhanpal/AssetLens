@@ -44,73 +44,52 @@ function sumInr(assets: BinanceAssetInr[]): number {
   return assets.reduce((sum, a) => sum + a.value_inr, 0);
 }
 
-/** In-flight fetches keyed by user so concurrent users never share one promise. */
-const fetchPromises = new Map<string, Promise<BinancePortfolioInr>>();
-
 /**
  * Fetches Binance funding and spot wallet balances for the given user and converts
  * each asset to INR using live CoinGecko prices. Cached per-user in Redis for 60 seconds.
  */
-export async function getBinancePortfolioInr(userId: string): Promise<BinancePortfolioInr> {
+export async function getBinancePortfolioInr(userId: string) {
   const cacheKey = `binance:inr:${userId}`;
   const cached = await redis.get(cacheKey);
   if (cached) {
     return JSON.parse(cached) as BinancePortfolioInr;
   }
 
-  let pending = fetchPromises.get(userId);
-  if (pending) {
-    return pending;
+  const walletClient = await createWalletClient(userId);
+  const spotClient = await createSpotClient(userId);
+
+  const fundingResponse = await walletClient.restAPI.fundingWallet();
+  const spotResponse = await spotClient.restAPI.getAccount();
+
+  const fundingRaw = (await fundingResponse.data()) as RawBalance[];
+  const spotData = (await spotResponse.data()) as { balances: RawBalance[] };
+  const spotRaw = spotData.balances ?? [];
+
+  const fundingMap = extractAssets(fundingRaw);
+  const spotMap = extractAssets(spotRaw);
+
+  const combinedMap: BalanceMap = new Map(fundingMap);
+  for (const [asset, data] of spotMap.entries()) {
+    const existing = combinedMap.get(asset) ?? { free: 0, locked: 0 };
+    combinedMap.set(asset, {
+      free: existing.free + data.free,
+      locked: existing.locked + data.locked,
+    });
   }
 
-  pending = (async () => {
-    try {
-      const [walletClient, spotClient] = await Promise.all([
-        createWalletClient(userId),
-        createSpotClient(userId),
-      ]);
+  const prices = await getCryptoPricesInr(Array.from(combinedMap.keys()));
 
-      const [fundingResponse, spotResponse] = await Promise.all([
-        walletClient.restAPI.fundingWallet(),
-        spotClient.restAPI.getAccount(),
-      ]);
+  const fundingAssets = toInrAssets(fundingMap, prices);
+  const spotAssets = toInrAssets(spotMap, prices);
+  const combinedAssets = toInrAssets(combinedMap, prices);
 
-      const fundingRaw = (await fundingResponse.data()) as RawBalance[];
-      const spotData = (await spotResponse.data()) as { balances: RawBalance[] };
-      const spotRaw = spotData.balances ?? [];
+  const result: BinancePortfolioInr = {
+    assets: combinedAssets,
+    total_inr: sumInr(combinedAssets),
+    funding: { assets: fundingAssets, total_inr: sumInr(fundingAssets) },
+    spot: { assets: spotAssets, total_inr: sumInr(spotAssets) },
+  };
 
-      const fundingMap = extractAssets(fundingRaw);
-      const spotMap = extractAssets(spotRaw);
-
-      const combinedMap: BalanceMap = new Map(fundingMap);
-      for (const [asset, data] of spotMap.entries()) {
-        const existing = combinedMap.get(asset) ?? { free: 0, locked: 0 };
-        combinedMap.set(asset, {
-          free: existing.free + data.free,
-          locked: existing.locked + data.locked,
-        });
-      }
-
-      const prices = await getCryptoPricesInr(Array.from(combinedMap.keys()));
-
-      const fundingAssets = toInrAssets(fundingMap, prices);
-      const spotAssets = toInrAssets(spotMap, prices);
-      const combinedAssets = toInrAssets(combinedMap, prices);
-
-      const result: BinancePortfolioInr = {
-        assets: combinedAssets,
-        total_inr: sumInr(combinedAssets),
-        funding: { assets: fundingAssets, total_inr: sumInr(fundingAssets) },
-        spot: { assets: spotAssets, total_inr: sumInr(spotAssets) },
-      };
-
-      await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL_SECONDS);
-      return result;
-    } finally {
-      fetchPromises.delete(userId);
-    }
-  })();
-
-  fetchPromises.set(userId, pending);
-  return pending;
+  await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL_SECONDS);
+  return result;
 }

@@ -176,7 +176,7 @@ export async function createZerodhaOrder(req: Request, res: Response) {
   }
 }
 
-export async function fetchZerodhaLoginUrl(req: Request, res: Response): Promise<void> {
+export async function fetchZerodhaLoginUrl(req: Request, res: Response) {
   try {
     const login_url = await fetchZerodhaKiteLoginUrl(req.userId);
     res.json({ login_url });

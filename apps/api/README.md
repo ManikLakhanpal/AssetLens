@@ -1,16 +1,16 @@
-# API Service (`apps/api`)
+# ⚙️ API Service (`apps/api`)
 
 Express + TypeScript backend for **authenticated** portfolio aggregation, Binance and Zerodha broker integrations, and AI proxy routes.
 
-## Responsibilities
+## 🧩 Responsibilities
 
-- **Auth:** Register, login, JWT verification, encrypted storage of Binance/Zerodha API keys (PostgreSQL + AES-256-GCM).
-- **Data isolation:** All broker and portfolio data is loaded for `req.userId` from the JWT — credentials and Redis caches are keyed per user (`binance:credentials:{userId}`, `binance:inr:{userId}`, `zerodha:access_token:{userId}`, `portfolio:summary:{userId}`, etc.).
-- Serve Binance and Zerodha endpoints using credentials from the database.
-- Aggregate portfolio summary and asset-level valuation (with Redis TTL caching when upstream data succeeds).
-- Proxy LLM requests to `apps/langchain-service` via `/ai/*`.
+- 🔐 **Auth:** Register, login, JWT verification, encrypted storage of Binance/Zerodha API keys (PostgreSQL + AES-256-GCM).
+- 🔒 **Data isolation:** All broker and portfolio data is loaded for `req.userId` from the JWT — credentials and Redis caches are keyed per user (`binance:credentials:{userId}`, `binance:inr:{userId}`, `zerodha:access_token:{userId}`, `portfolio:summary:{userId}`, etc.).
+- 💰 Serve Binance and Zerodha endpoints using credentials from the database.
+- 📊 Aggregate portfolio summary and asset-level valuation (with Redis TTL caching when upstream data succeeds).
+- 🤖 Proxy LLM requests to `apps/langchain-service` via `/ai/*`.
 
-## Public vs protected routes
+## 🛡️ Public vs Protected Routes
 
 | Mount | Auth |
 |-------|------|
@@ -20,24 +20,24 @@ Express + TypeScript backend for **authenticated** portfolio aggregation, Binanc
 
 Implementation: [`src/server.ts`](src/server.ts) mounts `/auth` first, then applies `authMiddleware` globally for all other routes.
 
-## Key route groups
+## 📡 Key Route Groups
 
-### Auth (public)
+### 🔐 Auth (public)
 
 - `POST /auth/register` — body: `{ username, password }`
 - `POST /auth/login` — body: `{ username, password }` → `{ token }`
 
-### Auth (JWT)
+### 🔐 Auth (JWT)
 
 - `GET /auth/me`
 - `PUT /auth/credentials` — body: optional `binance` / `zerodha` `{ apiKey, apiSecret }` (each section upserted independently)
 
-### Portfolio
+### 📊 Portfolio
 
 - `GET /portfolio/data` — `{ summary, assets, mfHoldings }` for dashboard pie chart and LangChain tools (summary/assets may be `null` on individual service errors)
 - `GET /portfolio/binance/inr-value`
 
-### Binance
+### 💰 Binance
 
 - `GET /binance/funding-account-data`
 - `GET /binance/spot-account-data`
@@ -45,7 +45,7 @@ Implementation: [`src/server.ts`](src/server.ts) mounts `/auth` first, then appl
 - `POST /binance/convert`
 - `POST /binance/transfer`
 
-### Zerodha
+### 🇮🇳 Zerodha
 
 - `GET /zerodha/login-url` — JSON `{ login_url }` for Kite OAuth
 - `GET /zerodha/profile`
@@ -55,18 +55,18 @@ Implementation: [`src/server.ts`](src/server.ts) mounts `/auth` first, then appl
 - `POST /zerodha/generate-token` — body: `{ request_token }` (persists encrypted access token + Redis for that user)
 - `POST /zerodha/place-order` — validated order payload
 
-### AI proxy
+### 🤖 AI Proxy
 
 - `POST /ai/portfolio-summary`
 - `POST /ai/chat`
 
-## Database and ORM
+## 🗃️ Database and ORM
 
 - **Prisma 7** with PostgreSQL — schema in [`prisma/schema.prisma`](prisma/schema.prisma) (`User`, `BinanceCredentials`, `ZerodhaCredentials`).
 - Run migrations: `npx prisma migrate dev`
 - Generate client (if needed): `npx prisma generate`
 
-## Environment variables
+## 🔑 Environment Variables
 
 Copy [`.env.example`](.env.example) to `.env` and set:
 
@@ -82,7 +82,7 @@ Copy [`.env.example`](.env.example) to `.env` and set:
 
 Broker API keys are **not** required in `.env` for normal operation; users save them via `PUT /auth/credentials` (web Settings).
 
-## Local development
+## 🚀 Local Development
 
 ```bash
 cd apps/api
@@ -90,7 +90,7 @@ npm install
 npm run dev
 ```
 
-## Type checking
+## ✅ Type Checking
 
 ```bash
 cd apps/api

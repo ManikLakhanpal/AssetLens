@@ -9,7 +9,7 @@ import { decrypt } from "../auth/cryptoService.js";
  * Required for `generateSession(request_token, api_secret)` on first login
  * (createKiteClient would throw before any daily token exists).
  */
-export async function createKiteConnectForSessionExchange(userId: string): Promise<Connect> {
+export async function createKiteConnectForSessionExchange(userId: string) {
   const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
   if (!zerodha) throw new Error("Zerodha credentials not found in database");
 
@@ -22,7 +22,7 @@ export async function createKiteConnectForSessionExchange(userId: string): Promi
  * Access token is sourced from Redis first (fast path), then decrypted from DB.
  * Falls back to the env var during initial setup before any token has been stored.
  */
-export async function createKiteClient(userId: string): Promise<Connect> {
+export async function createKiteClient(userId: string) {
   const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
   if (!zerodha) throw new Error("Zerodha credentials not found in database");
 
