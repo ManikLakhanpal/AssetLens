@@ -7,7 +7,7 @@ Next.js frontend for **authenticated** portfolio visualization and AI chat.
 - **Auth:** `/login`, `/signup`, JWT stored in `localStorage` (`assetlens_token`), Axios request interceptor attaches `Authorization: Bearer`.
 - **Settings (`/settings`):** View profile; save Binance and/or Zerodha API keys via `PUT /auth/credentials`.
 - **Zerodha Kite redirect (`/trade/redirect`):** Reads `request_token` from the query string, calls `POST /zerodha/generate-token`, shows success when the API stores the daily session token.
-- Render portfolio dashboard cards and charts with **GSAP** staggered enter animations.
+- Render portfolio dashboard cards and charts with **GSAP** staggered enter animations (portfolio pie uses a single `GET /portfolio/data` request).
 - Display Binance + Zerodha account data for the **logged-in** user only.
 - **AuthGuard** wraps the main dashboard so unauthenticated visitors are redirected to `/login`.
 - Bottom-right AI chat widget with full-screen mode, native **Markdown** rendering, and model toggle (`chatgpt` / `gemini`).

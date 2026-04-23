@@ -91,4 +91,4 @@ uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 ## Tooling note
 
-Allowlisted Node routes used by LangChain tools are defined in `app/api_fetch.py` (GET/POST path sets). New protected broker routes on the Node API may need matching allowlist updates if tools should call them.
+Allowlisted Node routes used by LangChain tools are defined in `app/api_fetch.py` (GET/POST path sets). Portfolio chart data is exposed as a single tool hitting `GET /portfolio/data` (replacing separate summary/assets GETs). New protected broker routes on the Node API may need matching allowlist updates if tools should call them.

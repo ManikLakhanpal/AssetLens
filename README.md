@@ -120,8 +120,7 @@ See [`Requestly.json`](Requestly.json) at the repo root for detailed request exa
 
 ### Portfolio (JWT required)
 
-- `GET /portfolio/summary`
-- `GET /portfolio/assets`
+- `GET /portfolio/data` — combined summary, per-asset INR slices, and MF holdings (partial `null` fields if a slice fails server-side)
 - `GET /portfolio/binance/inr-value`
 
 ### Binance (JWT required)

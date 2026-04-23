@@ -18,8 +18,7 @@ ALLOWED_GET_PATHS: FrozenSet[str] = frozenset(
         "/binance/funding-account-data",
         "/binance/spot-account-data",
         "/portfolio/binance/inr-value",
-        "/portfolio/summary",
-        "/portfolio/assets",
+        "/portfolio/data",
         "/binance/permissions",
     }
 )

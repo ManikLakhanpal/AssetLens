@@ -20,8 +20,14 @@
 # production
 /build
 
-# misc
-.DS_Store
+# Environment variables
+.env
+.env.local
+.env.production.local
+.env.test.local
+!.env.example
+
+# Certificates
 *.pem
 
 # debug
@@ -29,9 +35,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
 
 # vercel
 .vercel

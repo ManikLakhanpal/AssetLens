@@ -34,8 +34,7 @@ Implementation: [`src/server.ts`](src/server.ts) mounts `/auth` first, then appl
 
 ### Portfolio
 
-- `GET /portfolio/summary`
-- `GET /portfolio/assets`
+- `GET /portfolio/data` — `{ summary, assets, mfHoldings }` for dashboard pie chart and LangChain tools (summary/assets may be `null` on individual service errors)
 - `GET /portfolio/binance/inr-value`
 
 ### Binance

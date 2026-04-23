@@ -32,9 +32,12 @@ interface AssetData {
 }
 
 type ViewMode = "exchange" | "asset";
-type Settled<T> =
-  | { status: "fulfilled"; value: T }
-  | { status: "rejected"; reason: unknown };
+
+interface PortfolioPieData {
+  summary: PortfolioSummary | null;
+  assets: AssetData | null;
+  mfHoldings: unknown;
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -54,14 +57,6 @@ const PALETTE = [
 ];
 
 const colorFor = (index: number) => PALETTE[index % PALETTE.length];
-
-async function settle<T>(task: T) {
-  try {
-    return { status: "fulfilled", value: await task } as Settled<Awaited<T>>;
-  } catch (reason: unknown) {
-    return { status: "rejected", reason } as Settled<Awaited<T>>;
-  }
-}
 
 // ── Custom Tooltip ─────────────────────────────────────────────────────────
 
@@ -96,38 +91,44 @@ export default function PortfolioPieChart() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const summaryRes = await settle(api.get(routes.portfolio.summary));
-      const assetsRes = await settle(api.get(routes.portfolio.assets));
-      const mfRes = await settle(api.get(routes.zerodha.mfHoldings));
+      setErrorMsg(null);
+      try {
+        const { data } = await api.get<PortfolioPieData>(routes.portfolio.pieData);
+        setSummaryData(data.summary);
+        setAssetData(data.assets);
+        if (!data.summary && !data.assets) {
+          setErrorMsg("Failed to fetch portfolio data");
+        }
 
-      if (summaryRes.status === "fulfilled") setSummaryData(summaryRes.value.data);
-      if (assetsRes.status === "fulfilled") setAssetData(assetsRes.value.data);
-      if (summaryRes.status === "rejected" && assetsRes.status === "rejected") {
+        if (Array.isArray(data.mfHoldings)) {
+          const mfHoldings = data.mfHoldings.filter(isZerodhaMFHolding) as ZerodhaMFHolding[];
+          const slices = mfHoldings
+            .map((mf) => {
+              const value = mf.quantity * mf.last_price;
+              return {
+                name: mf.fund,
+                value,
+                exchange: "Zerodha" as const,
+              };
+            })
+            .filter((s) => s.value > 10);
+
+          const mfTotal = slices.reduce((sum, s) => sum + s.value, 0);
+          setMfAssetSlices(slices);
+          setMfValueInr(mfTotal);
+        } else {
+          setMfAssetSlices([]);
+          setMfValueInr(0);
+        }
+      } catch {
         setErrorMsg("Failed to fetch portfolio data");
-      }
-
-      if (mfRes.status === "fulfilled" && Array.isArray(mfRes.value.data)) {
-        const mfHoldings = mfRes.value.data.filter(isZerodhaMFHolding) as ZerodhaMFHolding[];
-        const slices = mfHoldings
-          .map((mf) => {
-            const value = mf.quantity * mf.last_price;
-            return {
-              name: mf.fund,
-              value,
-              exchange: "Zerodha" as const,
-            };
-          })
-          .filter((s) => s.value > 10);
-
-        const total = slices.reduce((sum, s) => sum + s.value, 0);
-        setMfAssetSlices(slices);
-        setMfValueInr(total);
-      } else {
+        setSummaryData(null);
+        setAssetData(null);
         setMfAssetSlices([]);
         setMfValueInr(0);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     load();
