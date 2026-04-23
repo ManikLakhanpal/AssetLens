@@ -12,18 +12,6 @@ import {
   type ZerodhaHolding,
 } from "../lib/zerodha";
 
-type Settled<T> =
-  | { status: "fulfilled"; value: T }
-  | { status: "rejected"; reason: unknown };
-
-async function settle<T>(task: T): Promise<Settled<Awaited<T>>> {
-  try {
-    return { status: "fulfilled", value: await task };
-  } catch (reason: unknown) {
-    return { status: "rejected", reason };
-  }
-}
-
 export default function ZerodhaHoldings() {
   const [holdings, setHoldings] = useState<ZerodhaHolding[]>([]);
   const [mfHoldings, setMfHoldings] = useState<ZerodhaMFHolding[]>([]);
@@ -36,12 +24,8 @@ export default function ZerodhaHoldings() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const stocksRes = await settle(api.get(routes.zerodha.holdings));
-        const mfRes = await settle(api.get(routes.zerodha.mfHoldings));
-
-        // Stocks
-        if (stocksRes.status === "fulfilled") {
-          const data = stocksRes.value.data;
+        try {
+          const { data } = await api.get(routes.zerodha.holdings);
           if (isZerodhaApiError(data)) {
             setStocksErrorMsg(data.message);
           } else if (Array.isArray(data)) {
@@ -50,14 +34,13 @@ export default function ZerodhaHoldings() {
           } else {
             setStocksErrorMsg("Received an invalid Zerodha holdings response.");
           }
-        } else {
-          const zerodhaError = extractZerodhaApiError(stocksRes.reason);
+        } catch (reason: unknown) {
+          const zerodhaError = extractZerodhaApiError(reason);
           setStocksErrorMsg(zerodhaError?.message ?? "Failed to fetch Zerodha holdings");
         }
 
-        // Mutual funds
-        if (mfRes.status === "fulfilled") {
-          const data = mfRes.value.data;
+        try {
+          const { data } = await api.get(routes.zerodha.mfHoldings);
           if (isZerodhaApiError(data)) {
             setMfErrorMsg(data.message);
           } else if (Array.isArray(data)) {
@@ -66,13 +49,10 @@ export default function ZerodhaHoldings() {
           } else {
             setMfErrorMsg("Received an invalid mutual fund holdings response.");
           }
-        } else {
-          const zerodhaError = extractZerodhaApiError(mfRes.reason);
+        } catch (reason: unknown) {
+          const zerodhaError = extractZerodhaApiError(reason);
           setMfErrorMsg(zerodhaError?.message ?? "Failed to fetch mutual fund holdings");
         }
-      } catch (error: unknown) {
-        const zerodhaError = extractZerodhaApiError(error);
-        setStocksErrorMsg(zerodhaError?.message ?? "Failed to fetch Zerodha holdings");
       } finally {
         setLoading(false);
       }

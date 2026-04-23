@@ -47,14 +47,9 @@ _ROUTE_SPECS: tuple[tuple[str, str, str], ...] = (
         "Binance positions valued in INR: combined, funding, and spot splits with quantities and INR values.",
     ),
     (
-        "get_portfolio_summary",
-        "/portfolio/summary",
-        "Aggregate INR totals: binance_inr, zerodha_inr (stocks only), total_inr.",
-    ),
-    (
-        "get_portfolio_assets",
-        "/portfolio/assets",
-        "Per-symbol INR slices for stocks and crypto (above ₹10), sorted by value.",
+        "get_portfolio_pie_data",
+        "/portfolio/data",
+        "Combined portfolio payload for charts and analysis: summary (binance_inr, zerodha_inr stocks-only, total_inr), assets (per-symbol INR slices above ₹10), and mfHoldings (mutual fund positions or Zerodha error object).",
     ),
     (
         "get_binance_permissions",

@@ -31,8 +31,7 @@ export const routes = {
     generateToken: "/zerodha/generate-token",
   },
   portfolio: {
-    summary: "/portfolio/summary",
-    assets: "/portfolio/assets",
+    pieData: "/portfolio/data",
     binanceInrValue: "/portfolio/binance/inr-value",
   },
   binance: {
@@ -70,6 +69,6 @@ api.interceptors.response.use(
       localStorage.removeItem(TOKEN_KEY);
       window.location.href = "/login";
     }
-    return Promise.reject(error);
+    throw error;
   }
 );

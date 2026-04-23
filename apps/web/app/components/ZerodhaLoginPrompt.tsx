@@ -12,11 +12,18 @@ export default function ZerodhaLoginPrompt({ message }: ZerodhaLoginPromptProps)
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    api
-      .get<{ login_url: string | null }>(routes.zerodha.loginUrl)
-      .then((res) => setLoginUrl(res.data.login_url))
-      .catch(() => setLoginUrl(null))
-      .finally(() => setFetching(false));
+    const load = async () => {
+      setFetching(true);
+      try {
+        const { data } = await api.get<{ login_url: string | null }>(routes.zerodha.loginUrl);
+        setLoginUrl(data.login_url);
+      } catch {
+        setLoginUrl(null);
+      } finally {
+        setFetching(false);
+      }
+    };
+    load();
   }, []);
 
   return (

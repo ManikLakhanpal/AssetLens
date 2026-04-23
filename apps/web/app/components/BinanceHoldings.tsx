@@ -37,13 +37,23 @@ export default function BinanceHoldings() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get(routes.portfolio.binanceInrValue)
-      .then((res) => setPortfolio(res.data))
-      .catch((err) =>
-        setErrorMsg(err?.response?.data?.error || "Failed to fetch from backend")
-      )
-      .finally(() => setLoading(false));
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data } = await api.get<BinancePortfolioInr>(routes.portfolio.binanceInrValue);
+        setPortfolio(data);
+        setErrorMsg(null);
+      } catch (err: unknown) {
+        const msg =
+          err && typeof err === "object" && "response" in err
+            ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
+            : undefined;
+        setErrorMsg(msg || "Failed to fetch from backend");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   const spotAssets = portfolio?.spot.assets ?? [];

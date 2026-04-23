@@ -550,7 +550,7 @@
       "data": {
         "type": "http",
         "request": {
-          "url": "http://localhost:4000/portfolio/assets",
+          "url": "http://localhost:4000/portfolio/data",
           "method": "GET",
           "headers": [],
           "queryParams": [],
@@ -570,41 +570,11 @@
       },
       "type": "api",
       "id": "60438703-9069-4dee-acff-cfacd3fb196e",
-      "name": "Portfolio Assets Breakdown",
+      "name": "Portfolio pie data",
       "collectionId": "d8900598-7305-4169-ab5e-345dcdd18ee3",
       "deleted": false,
       "description": "",
       "rank": "ay"
-    },
-    {
-      "data": {
-        "type": "http",
-        "request": {
-          "url": "http://localhost:4000/portfolio/summary",
-          "method": "GET",
-          "headers": [],
-          "queryParams": [],
-          "body": "",
-          "contentType": "text/plain"
-        },
-        "scripts": {
-          "preRequest": "",
-          "postResponse": ""
-        },
-        "auth": {
-          "currentAuthType": "INHERIT",
-          "authConfigStore": {}
-        },
-        "response": null,
-        "examples": []
-      },
-      "type": "api",
-      "id": "57a520a7-a119-4d4d-a384-1a5279063f21",
-      "name": "Portfolio Breakdown",
-      "collectionId": "d8900598-7305-4169-ab5e-345dcdd18ee3",
-      "deleted": false,
-      "description": "",
-      "rank": "az"
     },
     {
       "name": "Zerodha",
