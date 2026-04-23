@@ -22,7 +22,7 @@ export type {
  * Used by the /zerodha/login-url endpoint so the frontend can show a login button
  * without relying on the ZERODHA_API_KEY env var (which is no longer used).
  */
-export async function fetchZerodhaKiteLoginUrl(userId: string): Promise<string | null> {
+export async function fetchZerodhaKiteLoginUrl(userId: string) {
   const creds = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
   if (!creds) return null;
   const apiKey = decrypt(creds.apiKey);

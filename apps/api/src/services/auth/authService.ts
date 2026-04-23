@@ -20,7 +20,7 @@ export type JwtPayload = {
  * Creates a new user account and returns a signed JWT.
  * Throws if the username is already taken.
  */
-export async function register(username: string, password: string): Promise<string> {
+export async function register(username: string, password: string) {
   const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) throw new Error("Username already taken");
 
@@ -35,7 +35,7 @@ export async function register(username: string, password: string): Promise<stri
  * Validates username/password and returns a signed JWT on success.
  * Throws if credentials are invalid.
  */
-export async function login(username: string, password: string): Promise<string> {
+export async function login(username: string, password: string) {
   const user = await prisma.user.findUnique({ where: { username } });
 
   if (!user) throw new Error("Invalid credentials");
@@ -90,7 +90,7 @@ export function verifyToken(token: string): JwtPayload {
 /**
  * Returns profile info and credential presence flags for the given user.
  */
-export async function getMe(userId: string): Promise<MeResponse> {
+export async function getMe(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { binance: true, zerodha: true },
@@ -114,7 +114,7 @@ export async function getMe(userId: string): Promise<MeResponse> {
 export async function saveCredentials(
   userId: string,
   input: SaveCredentialsInput
-): Promise<void> {
+) {
   if (input.binance) {
     await prisma.binanceCredentials.upsert({
       where: { userId },

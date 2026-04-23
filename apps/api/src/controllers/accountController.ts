@@ -17,7 +17,7 @@ export async function fetchFundingWalletBalance(req: Request, res: Response) {
   }
 }
 
-export async function convertAssetHandler(req: Request, res: Response): Promise<void> {
+export async function convertAssetHandler(req: Request, res: Response) {
   try {
     const { symbol, side, amount } = req.body;
 
@@ -54,7 +54,7 @@ export async function fetchSpotAccountInfo(req: Request, res: Response) {
   }
 }
 
-export async function transferAssetHandler(req: Request, res: Response): Promise<void> {
+export async function transferAssetHandler(req: Request, res: Response) {
   try {
     const { type, asset, amount } = req.body;
 
