@@ -1,9 +1,7 @@
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:17-alpine
     container_name: trader_postgres
-    # Only pass DB credentials into Postgres (not the whole repo .env — avoids leaking app keys into the DB container).
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-trader}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trader_dev_password}
@@ -17,10 +15,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - trader_network
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: trader_redis
@@ -33,10 +31,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - trader_network
 
-  # API Service
   api:
     build:
       context: ./apps/api
@@ -49,21 +47,23 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Override host-only URLs from apps/api/.env so the API reaches sibling containers by Compose service name.
     environment:
+      PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER:-trader}:${POSTGRES_PASSWORD:-trader_dev_password}@postgres:5432/${POSTGRES_DB:-trader_db}
       REDIS_URL: redis://redis:6379
       FASTAPI_BASE_URL: http://langchain:8000
     ports:
       - "4000:4000"
-    volumes:
-      - ./apps/api/src:/app/src
-      - ./apps/api/prisma:/app/prisma
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
     networks:
       - trader_network
-    command: npm run dev:docker
 
-  # LangChain Service
   langchain:
     build:
       context: ./apps/langchain-service
@@ -71,35 +71,44 @@ services:
     container_name: trader_langchain
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
     env_file:
       - ./apps/langchain-service/.env
     environment:
-      # app/config.py reads ASSETLENS_API_BASE_URL (not localhost — that would be the LangChain container itself).
       ASSETLENS_API_BASE_URL: http://api:4000
     ports:
       - "8000:8000"
-    volumes:
-      - ./apps/langchain-service/app:/app/app
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - trader_network
 
-  # Web Service
   web:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
     container_name: trader_web
     depends_on:
-      - api
-      - langchain
+      api:
+        condition: service_healthy
     env_file:
       - ./apps/web/.env
     ports:
       - "3000:3000"
-    volumes:
-      - ./apps/web/app:/app/app
-      - ./apps/web/public:/app/public
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - trader_network
 
