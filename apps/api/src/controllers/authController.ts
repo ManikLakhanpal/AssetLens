@@ -3,7 +3,7 @@ import { login, register, getMe, saveCredentials } from "../services/auth/authSe
 import type { LoginInput, SignupInput, AuthResponse, SaveCredentialsInput } from "../dto/auth.dto.js";
 
 export async function registerHandler(req: Request, res: Response) {
-  const { username, password } = req.body as Partial<SignupInput>;
+  const { username, password } = req.body as SignupInput;
 
   if (!username || !password) {
     res.status(400).json({ error: "username and password are required" });
