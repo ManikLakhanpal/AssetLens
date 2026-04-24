@@ -25,12 +25,14 @@ export const fastApiClient = {
     model: Model;
     history: ChatMessage[];
     portfolio_context_markdown: string;
+    auth_token?: string;
   }) {
     const res = await client.post("/chat", {
       message: args.message,
       model: args.model,
       history: args.history,
       portfolio_context_markdown: args.portfolio_context_markdown,
+      auth_token: args.auth_token,
     });
     return res.data as { reply: string };
   },

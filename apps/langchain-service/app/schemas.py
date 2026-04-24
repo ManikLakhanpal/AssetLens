@@ -24,6 +24,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="Deprecated; prefer portfolio_context_markdown from the API server.",
     )
+    auth_token: Optional[str] = Field(
+        default=None,
+        description="JWT forwarded from the Node API so tool calls can authenticate.",
+    )
 
 
 class SummarizeResponse(BaseModel):

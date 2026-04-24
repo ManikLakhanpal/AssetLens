@@ -167,6 +167,7 @@ export async function placeZerodhaOrder(order: PlaceZerodhaOrderInput, userId: s
       order_type: "MARKET",
       market_protection: 2,
     } as any);
+    
     return result;
   } catch (error) {
     const serviceError = buildZerodhaServiceError(error, "Failed to place Zerodha order");
