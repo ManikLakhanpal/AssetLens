@@ -1,8 +1,7 @@
 import { KiteConnect } from "kiteconnect";
-import type { Connect } from "kiteconnect";
 import redis from "../../db/redis.js";
 import prisma from "../../db/prisma.js";
-import { decrypt } from "../auth/cryptoService.js";
+import { decrypt, encrypt } from "../auth/cryptoService.js";
 
 /**
  * Kite client with only api_key — no access token set.
@@ -23,32 +22,48 @@ export async function createKiteConnectForSessionExchange(userId: string) {
  * Falls back to the env var during initial setup before any token has been stored.
  */
 export async function createKiteClient(userId: string) {
-  const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
-  if (!zerodha) throw new Error("Zerodha credentials not found in database");
+  const redisKey = `zerodha:creds:${userId}`;
+  const cached = await redis.get(redisKey);
 
-  const apiKey = decrypt(zerodha.apiKey);
-  const client = new KiteConnect({ api_key: apiKey });
-
-  const redisKey = `zerodha:access_token:${userId}`;
-
-  const cachedToken = await redis.get(redisKey);
-  if (cachedToken) {
-    client.setAccessToken(decrypt(cachedToken));
+  // * 1. If credentials are cached, decrypt and return it
+  if (cached) {
+    const { apiKey, accessToken } = JSON.parse(decrypt(cached));
+    
+    const client = new KiteConnect({ api_key: apiKey });
+    client.setAccessToken(accessToken);
     return client;
   }
+
+  // * 2. If not cached, load from DB
+  const zerodha = await prisma.zerodhaCredentials.findUnique({ where: { userId } });
+  if (!zerodha) { 
+    throw new Error("Zerodha credentials not found in database");
+  }
+
+  const decryptedApiKey = decrypt(zerodha.apiKey);
+  const client = new KiteConnect({ api_key: decryptedApiKey });
+
+  // * 3. Handle Token Logic
+  let decryptedToken: string;
 
   if (zerodha.accessToken) {
-    const token = decrypt(zerodha.accessToken);
-    await redis.set(redisKey, zerodha.accessToken, "EX", 86400);
-    client.setAccessToken(token);
-    return client;
+    decryptedToken = decrypt(zerodha.accessToken);
+  } else {
+    throw new Error("No access token available. Please re-authenticate.");
   }
 
-  const envToken = process.env.ZERODHA_ACCESS_TOKEN;
-  if (envToken) {
-    client.setAccessToken(envToken);
-    return client;
-  }
+  // * 4. Set token on client
+  client.setAccessToken(decryptedToken);
 
-  throw new Error("Zerodha daily token not configured. Generate it via /zerodha/generate-token.");
+  // * 5. Sync back to Redis: Store both together for the next call after encryption
+  const sessionData = {
+    apiKey: decryptedApiKey,
+    accessToken: decryptedToken
+  };
+  const encryptedSession = encrypt(JSON.stringify(sessionData));
+  
+  // Cache for 24 hours (86400s)
+  await redis.set(redisKey, encryptedSession, "EX", 86400);
+
+  return client;
 }
