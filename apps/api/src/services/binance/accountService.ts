@@ -16,9 +16,12 @@ export async function fundingWalletBalance(userId: string) {
   try {
     const walletClient = await createWalletClient(userId);
     const response = await walletClient.restAPI.fundingWallet();
+
     console.log("fundingWallet() rate limits:", response.rateLimits!);
+
     const data = await response.data();
     console.log("fundingWallet() response:", data);
+    
     return data;
   } catch (error) {
     console.error((error as BinanceRequestError).response?.data ?? (error as BinanceRequestError).message);

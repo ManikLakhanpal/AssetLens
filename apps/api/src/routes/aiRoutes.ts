@@ -42,11 +42,14 @@ router.post("/chat", async (req, res) => {
     const snapshot = await collectPortfolioSnapshot(req.userId);
     const portfolio_context_markdown = buildPortfolioContextMarkdown(snapshot);
 
+    const auth_token = req.headers.authorization?.slice(7);
+
     const data = await fastApiClient.chat({
       message,
       model,
       history,
       portfolio_context_markdown,
+      auth_token,
     });
 
     res.json(data);

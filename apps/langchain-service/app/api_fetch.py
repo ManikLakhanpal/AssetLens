@@ -3,9 +3,25 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
-from typing import FrozenSet
+from contextvars import ContextVar
+from typing import FrozenSet, Optional
 
 from .config import get_assetlens_api_base_url
+
+# Per-request JWT forwarded from the Node API.
+# Set by chat_agent before executing tool calls.
+_auth_token_var: ContextVar[Optional[str]] = ContextVar("_auth_token_var", default=None)
+
+
+def set_auth_token(token: Optional[str]) -> None:
+    _auth_token_var.set(token)
+
+
+def _auth_headers() -> dict[str, str]:
+    token = _auth_token_var.get()
+    if token:
+        return {"Authorization": f"Bearer {token}"}
+    return {}
 
 # Every read-only GET route mounted on the AssetLens Node API (apps/api/src/server.ts).
 ALLOWED_GET_PATHS: FrozenSet[str] = frozenset(
@@ -54,7 +70,7 @@ def fetch_assetlens_get(path: str) -> str:
     base = get_assetlens_api_base_url().rstrip("/")
     url = f"{base}{normalized}"
     try:
-        req = urllib.request.Request(url, method="GET", headers={"Accept": "application/json"})
+        req = urllib.request.Request(url, method="GET", headers={"Accept": "application/json", **_auth_headers()})
         with urllib.request.urlopen(req, timeout=120) as resp:
             body = resp.read().decode("utf-8", errors="replace")
             return body if body.strip() else json.dumps({"ok": True, "empty": True})
@@ -95,7 +111,7 @@ def fetch_assetlens_post(path: str, payload: dict) -> str:
             url, 
             data=data, 
             method="POST", 
-            headers={"Accept": "application/json", "Content-Type": "application/json"}
+            headers={"Accept": "application/json", "Content-Type": "application/json", **_auth_headers()}
         )
         with urllib.request.urlopen(req, timeout=120) as resp:
             body = resp.read().decode("utf-8", errors="replace")

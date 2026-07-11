@@ -62,6 +62,7 @@ def chat(req: ChatRequest) -> ChatResponse:
         system_prompt,
         history_messages,
         req.message,
+        auth_token=req.auth_token,
     )
     return ChatResponse(reply=reply)
 

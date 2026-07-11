@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
-from typing import List
+from typing import List, Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 
+from .api_fetch import set_auth_token
 from .route_tools import assetlens_route_tools
 
 
@@ -54,8 +55,10 @@ def run_chat_with_tools(
     history: List[BaseMessage],
     user_message: str,
     *,
+    auth_token: Optional[str] = None,
     max_tool_rounds: int = 14,
 ) -> str:
+    set_auth_token(auth_token)
     llm_bound = llm.bind_tools(assetlens_route_tools)
 
     messages: List[BaseMessage] = [SystemMessage(content=system_prompt)]
