@@ -8,6 +8,10 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 
 from .api_fetch import set_auth_token
 from .route_tools import assetlens_route_tools
+from .news_tools import get_asset_news
+
+ALL_AGENT_TOOLS = list(assetlens_route_tools)
+ALL_AGENT_TOOLS.append(get_asset_news)
 
 
 def _extract_text(ai: AIMessage) -> str:
@@ -29,7 +33,7 @@ def _tool_messages_for_ai_message(ai: AIMessage) -> List[ToolMessage]:
     out: List[ToolMessage] = []
     calls = getattr(ai, "tool_calls", None) or []
 
-    tools_by_name = {t.name: t for t in assetlens_route_tools}
+    tools_by_name = {t.name: t for t in ALL_AGENT_TOOLS}
 
     for tc in calls:
         tid = tc.get("id") or ""
@@ -59,7 +63,7 @@ def run_chat_with_tools(
     max_tool_rounds: int = 14,
 ) -> str:
     set_auth_token(auth_token)
-    llm_bound = llm.bind_tools(assetlens_route_tools)
+    llm_bound = llm.bind_tools(ALL_AGENT_TOOLS)
 
     messages: List[BaseMessage] = [SystemMessage(content=system_prompt)]
     messages.extend(history)

@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@astryxdesign/cli": "^0.1.4",
+    "@astryxdesign/core": "^0.1.4",
+    "@astryxdesign/theme-neutral": "^0.1.4",
     "@gsap/react": "^2.1.2",
     "axios": "^1.13.6",
     "gsap": "^3.14.2",
