@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { collectPortfolioSnapshot } from "../services/portfolio/portfolioSnapshotService";
-import { buildPortfolioContextMarkdown } from "../services/portfolio/portfolioContextMarkdown";
-import { fastApiClient } from "../services/fastApiClient";
-import type { Model, ChatMessage } from "../dto/ai.dto";
+import { collectPortfolioSnapshot } from "../services/portfolio/portfolioSnapshotService.js";
+import { buildPortfolioContextMarkdown } from "../services/portfolio/portfolioContextMarkdown.js";
+import { fastApiClient } from "../services/fastApiClient.js";
+import type { Model, ChatMessage } from "../dto/ai.dto.js";
 
 const router = Router();
 

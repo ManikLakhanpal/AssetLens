@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { fetchBinanceInrValue, fetchPortfolioPieData } from "../controllers/portfolioController";
+import { fetchBinanceInrValue, fetchPortfolioPieData } from "../controllers/portfolioController.js";
 
 const router = Router();
 

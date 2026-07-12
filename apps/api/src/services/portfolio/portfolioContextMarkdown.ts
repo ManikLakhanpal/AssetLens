@@ -1,6 +1,6 @@
-import type { PortfolioSummary, AssetSlice, PortfolioSnapshotInput } from "../../dto/portfolio.dto";
-import type { BinancePortfolioInr, BinanceAssetInr } from "../../dto/binance.dto";
-import type { ZerodhaServiceError } from "../../dto/zerodha.dto";
+import type { PortfolioSummary, AssetSlice, PortfolioSnapshotInput } from "../../dto/portfolio.dto.js";
+import type { BinancePortfolioInr, BinanceAssetInr } from "../../dto/binance.dto.js";
+import type { ZerodhaServiceError } from "../../dto/zerodha.dto.js";
 
 function isZerodhaError(v: unknown): v is ZerodhaServiceError {
   return (

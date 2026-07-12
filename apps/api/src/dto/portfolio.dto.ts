@@ -1,4 +1,4 @@
-import type { BinancePortfolioInr } from "./binance.dto";
+import type { BinancePortfolioInr } from "./binance.dto.js";
 
 export interface PortfolioSummary {
   binance_inr: number;

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Model, ChatMessage } from "../dto/ai.dto";
+import type { Model, ChatMessage } from "../dto/ai.dto.js";
 
 export type { Model, ChatMessage };
 
