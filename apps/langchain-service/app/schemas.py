@@ -8,6 +8,14 @@ from pydantic import BaseModel, Field
 class SummarizeRequest(BaseModel):
     snapshot: Dict[str, Any] = Field(..., description="Portfolio snapshot collected by Node")
     model: Optional[Literal["chatgpt", "gemini"]] = None
+    delta: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Portfolio delta since last snapshot (for periodic email updates).",
+    )
+    periodic_update: bool = Field(
+        default=False,
+        description="When true, tailor the summary for a scheduled email update.",
+    )
 
 
 class ChatMessage(BaseModel):

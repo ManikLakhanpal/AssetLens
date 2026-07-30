@@ -113,6 +113,26 @@ services:
     networks:
       - trader_network
 
+  worker:
+    build:
+      context: ./apps/worker
+      dockerfile: Dockerfile
+    container_name: trader_worker
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/worker/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      API_BASE_URL: http://api:4000
+      WORKER_CONCURRENCY: 3
+    restart: unless-stopped
+    networks:
+      - trader_network
+
 networks:
   trader_network:
     driver: bridge

@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 
-def build_summarize_system_prompt() -> str:
+def build_summarize_system_prompt(*, periodic_update: bool = False) -> str:
     now = datetime.utcnow().strftime("%Y-%m-%d")
-    return (
+    base = (
         "You are a portfolio assistant for AssetLens. "
         "Given a portfolio snapshot, produce a clear, accurate summary for the user.\n\n"
         "Respond in GitHub-Flavored Markdown only. Use this structure:\n"
@@ -17,17 +17,38 @@ def build_summarize_system_prompt() -> str:
         "Short comment on concentration vs diversification (no precise percentages required unless obvious from data).\n\n"
         "## Notes\n"
         "Risks, data gaps (e.g. auth errors in snapshot), or follow-ups the user might want to verify.\n\n"
+    )
+
+    if periodic_update:
+        base += (
+            "## Since last update (≈2h ago)\n"
+            "When delta data is provided, call out largest gainers/losers by INR value or %, "
+            "new or removed positions, and overall portfolio value change. "
+            "If Zerodha auth failed in the snapshot, tell the user to re-login at /trade/redirect.\n\n"
+        )
+
+    base += (
         f"Today's date: {now}.\n"
         "Do not claim you executed trades. Be concise but informative."
     )
+    return base
 
 
-def build_summarize_user_prompt(snapshot: object) -> str:
-    return (
+def build_summarize_user_prompt(
+    snapshot: object,
+    delta: object | None = None,
+) -> str:
+    prompt = (
         "Portfolio snapshot (JSON):\n"
         f"{snapshot}\n\n"
-        "Summarize holdings and provide key insights using the Markdown structure from your instructions."
     )
+    if delta is not None:
+        prompt += (
+            "Portfolio delta since last update (JSON):\n"
+            f"{delta}\n\n"
+        )
+    prompt += "Summarize holdings and provide key insights using the Markdown structure from your instructions."
+    return prompt
 
 
 def build_chat_system_prompt(

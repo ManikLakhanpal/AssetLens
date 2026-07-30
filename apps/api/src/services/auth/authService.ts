@@ -93,7 +93,7 @@ export function verifyToken(token: string): JwtPayload {
 export async function getMe(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { binance: true, zerodha: true },
+    include: { binance: true, zerodha: true, notificationPreferences: true },
   });
 
   if (!user) throw new Error("User not found");
@@ -101,9 +101,11 @@ export async function getMe(userId: string) {
   return {
     id: user.id,
     username: user.username,
+    email: user.email,
     createdAt: user.createdAt.toISOString(),
     hasBinance: user.binance !== null,
     hasZerodha: user.zerodha !== null,
+    notificationsEnabled: user.notificationPreferences?.enabled ?? false,
   };
 }
 
