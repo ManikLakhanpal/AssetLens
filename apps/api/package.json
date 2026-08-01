@@ -36,7 +36,10 @@
     "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",
     "kiteconnect": "^5.2.0",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "resend": "^6.9.3",
+    "marked": "^17.0.4",
+    "bullmq": "^5.70.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

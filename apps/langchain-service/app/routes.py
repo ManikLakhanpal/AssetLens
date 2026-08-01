@@ -36,8 +36,8 @@ def summarize(req: SummarizeRequest) -> SummarizeResponse:
     model = req.model or "chatgpt"
     llm = get_llm(model)
 
-    system_prompt = build_summarize_system_prompt()
-    user_prompt = build_summarize_user_prompt(req.snapshot)
+    system_prompt = build_summarize_system_prompt(periodic_update=req.periodic_update)
+    user_prompt = build_summarize_user_prompt(req.snapshot, req.delta)
 
     response = llm.invoke(
         [

@@ -103,6 +103,8 @@ Use these templates:
   - `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`
   - `PORT` (default `4000`)
   - `FASTAPI_BASE_URL` (default `http://localhost:8000`)
+  - `RESEND_API_KEY`, `EMAIL_FROM`, `WEB_BASE_URL` (for portfolio email notifications)
+  - Optional: `WORKER_SECRET` (protects internal worker routes)
   - Optional: `ZERODHA_ACCESS_TOKEN` fallback before DB-stored daily token
   - Binance and Zerodha **API keys are stored per user in the database** (not required in `.env` for normal operation)
 - **apps/web**
@@ -113,7 +115,7 @@ Use these templates:
 ## 🔒 Authentication
 
 - **Public:** `POST /auth/register`, `POST /auth/login`, `GET /health`
-- **Protected (Bearer JWT):** all other API routes, including `/binance/*`, `/zerodha/*`, `/portfolio/*`, `/ai/*`
+- **Protected (Bearer JWT):** all other API routes, including `/binance/*`, `/zerodha/*`, `/portfolio/*`, `/ai/*`, `/notifications/*`
 - The web app stores the JWT in `localStorage` and sends `Authorization: Bearer <token>` on API requests.
 
 ## 📡 API Overview
@@ -154,6 +156,22 @@ See [`Requestly.json`](Requestly.json) at the repo root for detailed request exa
 
 - `POST /ai/portfolio-summary`
 - `POST /ai/chat`
+
+### 📧 Notifications (JWT required)
+
+- `GET /notifications/preferences` — email, enabled flag, model, interval
+- `PUT /notifications/preferences` — update email and notification settings
+- `POST /notifications/test` — send a one-off test portfolio email
+- `GET /notifications/logs` — recent delivery log entries
+
+A background **worker** (`apps/worker`) runs every 2 hours via BullMQ, fetches eligible users, and triggers portfolio email updates through internal API routes.
+
+## 📬 Portfolio email updates
+
+1. Set `RESEND_API_KEY` and `EMAIL_FROM` in `apps/api/.env`.
+2. Start the worker: `cd apps/worker && npm install && npm run dev` (or `docker compose up worker`).
+3. In **Settings**, add your email, enable notifications, and use **Send test email** to verify.
+4. Optional: set `WORKER_SECRET` in both `apps/api/.env` and `apps/worker/.env` to protect internal routes.
 
 ## 💬 AI Chat Flow
 

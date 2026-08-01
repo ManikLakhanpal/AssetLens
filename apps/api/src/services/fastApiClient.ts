@@ -12,10 +12,17 @@ const client = axios.create({
 });
 
 export const fastApiClient = {
-  async summarize(args: { snapshot: unknown; model: Model }) {
+  async summarize(args: {
+    snapshot: unknown;
+    model: Model;
+    delta?: unknown;
+    periodicUpdate?: boolean;
+  }) {
     const res = await client.post("/summarize", {
       snapshot: args.snapshot,
       model: args.model,
+      delta: args.delta,
+      periodic_update: args.periodicUpdate ?? false,
     });
     return res.data as { summary: string };
   },

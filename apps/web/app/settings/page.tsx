@@ -8,9 +8,26 @@ import AuthGuard from "../components/AuthGuard";
 type MeResponse = {
   id: string;
   username: string;
+  email: string | null;
   createdAt: string;
   hasBinance: boolean;
   hasZerodha: boolean;
+  notificationsEnabled: boolean;
+};
+
+type NotificationPreferences = {
+  email: string | null;
+  enabled: boolean;
+  intervalHours: number;
+  model: "chatgpt" | "gemini";
+  timezone: string;
+};
+
+type NotificationLogEntry = {
+  id: string;
+  status: string;
+  reason: string | null;
+  createdAt: string;
 };
 
 // --- Reusable field component ---
@@ -148,6 +165,17 @@ export default function SettingsPage() {
   const [zerodhaSaved, setZerodhaSaved] = useState(false);
   const [zerodhaError, setZerodhaError] = useState("");
 
+  // Notification state
+  const [notifEmail, setNotifEmail] = useState("");
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifModel, setNotifModel] = useState<"chatgpt" | "gemini">("chatgpt");
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifSaved, setNotifSaved] = useState(false);
+  const [notifError, setNotifError] = useState("");
+  const [testSending, setTestSending] = useState(false);
+  const [testMessage, setTestMessage] = useState("");
+  const [notifLogs, setNotifLogs] = useState<NotificationLogEntry[]>([]);
+
   const fetchMe = useCallback(async () => {
     try {
       const { data } = await api.get<MeResponse>(routes.auth.me);
@@ -157,9 +185,25 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const [prefsRes, logsRes] = await Promise.all([
+        api.get<NotificationPreferences>(routes.notifications.preferences),
+        api.get<{ logs: NotificationLogEntry[] }>(routes.notifications.logs),
+      ]);
+      setNotifEmail(prefsRes.data.email ?? "");
+      setNotifEnabled(prefsRes.data.enabled);
+      setNotifModel(prefsRes.data.model);
+      setNotifLogs(logsRes.data.logs);
+    } catch {
+      // preferences may not exist yet for new users
+    }
+  }, []);
+
   useEffect(() => {
     fetchMe();
-  }, [fetchMe]);
+    fetchNotifications();
+  }, [fetchMe, fetchNotifications]);
 
   async function saveBinance() {
     setBinanceSaving(true);
@@ -205,6 +249,49 @@ export default function SettingsPage() {
     }
   }
 
+  async function saveNotifications() {
+    setNotifSaving(true);
+    setNotifSaved(false);
+    setNotifError("");
+    try {
+      const { data } = await api.put<NotificationPreferences>(routes.notifications.preferences, {
+        email: notifEmail.trim() || null,
+        enabled: notifEnabled,
+        model: notifModel,
+      });
+      setNotifEmail(data.email ?? "");
+      setNotifEnabled(data.enabled);
+      setNotifModel(data.model);
+      setNotifSaved(true);
+      setMe((prev) => (prev ? { ...prev, email: data.email, notificationsEnabled: data.enabled } : prev));
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        "Failed to save notification settings.";
+      setNotifError(msg);
+    } finally {
+      setNotifSaving(false);
+    }
+  }
+
+  async function sendTestEmail() {
+    setTestSending(true);
+    setTestMessage("");
+    setNotifError("");
+    try {
+      await api.post(routes.notifications.test);
+      setTestMessage("Test email sent. Check your inbox.");
+      await fetchNotifications();
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        "Failed to send test email.";
+      setNotifError(msg);
+    } finally {
+      setTestSending(false);
+    }
+  }
+
   return (
     <AuthGuard>
       <div className="relative min-h-screen bg-white dark:bg-[#050511] text-slate-900 dark:text-zinc-100 overflow-hidden">
@@ -232,7 +319,7 @@ export default function SettingsPage() {
               Settings
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
-              Manage your profile and API credentials.
+              Manage your profile, API credentials, and email notifications.
             </p>
           </div>
 
@@ -259,6 +346,89 @@ export default function SettingsPage() {
               </div>
             ) : (
               <p className="text-sm text-red-400">Could not load profile.</p>
+            )}
+          </div>
+
+          {/* Email notifications */}
+          <div className="flex flex-col gap-4 p-6 rounded-2xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/50">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-200">Portfolio email updates</h2>
+              <StatusBadge configured={notifEnabled && Boolean(notifEmail)} />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              Receive an AI-generated portfolio summary every 2 hours at your email address.
+            </p>
+
+            <Field
+              id="notification-email"
+              label="Email address"
+              type="email"
+              value={notifEmail}
+              onChange={setNotifEmail}
+              placeholder="you@example.com"
+            />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium uppercase tracking-widest text-slate-400 dark:text-zinc-500">
+                AI model
+              </label>
+              <select
+                value={notifModel}
+                onChange={(e) => setNotifModel(e.target.value as "chatgpt" | "gemini")}
+                className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700/60 text-slate-800 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 transition"
+              >
+                <option value="chatgpt">ChatGPT</option>
+                <option value="gemini">Gemini</option>
+              </select>
+            </div>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifEnabled}
+                onChange={(e) => setNotifEnabled(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500/40"
+              />
+              <span className="text-sm text-slate-700 dark:text-zinc-200">
+                Enable 2-hour portfolio email updates
+              </span>
+            </label>
+
+            {notifError && <p className="text-xs text-red-500 dark:text-red-400">{notifError}</p>}
+            {notifSaved && <p className="text-xs text-teal-600 dark:text-teal-400">Notification settings saved.</p>}
+            {testMessage && <p className="text-xs text-teal-600 dark:text-teal-400">{testMessage}</p>}
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={saveNotifications}
+                disabled={notifSaving}
+                className="px-5 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 active:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors duration-150 shadow-[0_0_16px_rgba(20,184,166,0.25)]"
+              >
+                {notifSaving ? "Saving…" : "Save notifications"}
+              </button>
+              <button
+                onClick={sendTestEmail}
+                disabled={testSending || !notifEmail.trim()}
+                className="px-5 py-2 rounded-xl bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 dark:text-zinc-200 text-sm font-medium transition-colors duration-150"
+              >
+                {testSending ? "Sending…" : "Send test email"}
+              </button>
+            </div>
+
+            {notifLogs.length > 0 && (
+              <div className="mt-2 pt-4 border-t border-slate-200 dark:border-zinc-800/50">
+                <h3 className="text-xs font-medium uppercase tracking-widest text-slate-400 dark:text-zinc-500 mb-2">
+                  Recent delivery log
+                </h3>
+                <ul className="flex flex-col gap-1.5">
+                  {notifLogs.slice(0, 5).map((log) => (
+                    <li key={log.id} className="text-xs text-slate-500 dark:text-zinc-400">
+                      {new Date(log.createdAt).toLocaleString()} — {log.status}
+                      {log.reason ? ` (${log.reason})` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 

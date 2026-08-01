@@ -15,12 +15,49 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
+  email     String?  @unique
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  binance BinanceCredentials?
-  zerodha ZerodhaCredentials?
+  binance                 BinanceCredentials?
+  zerodha                 ZerodhaCredentials?
+  notificationPreferences NotificationPreference?
+  portfolioSnapshots      PortfolioSnapshot[]
+  notificationLogs        NotificationLog[]
+}
+
+model NotificationPreference {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled       Boolean  @default(false)
+  intervalHours Int      @default(2)
+  model         String   @default("chatgpt")
+  timezone      String   @default("UTC")
+  updatedAt     DateTime @updatedAt
+}
+
+model PortfolioSnapshot {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json
+  totalInr  Float?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model BinanceCredentials {

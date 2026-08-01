@@ -15,9 +15,11 @@ export type AuthResponse = {
 export type MeResponse = {
   id: string;
   username: string;
+  email: string | null;
   createdAt: string;
   hasBinance: boolean;
   hasZerodha: boolean;
+  notificationsEnabled: boolean;
 };
 
 export type SaveCredentialsInput = {

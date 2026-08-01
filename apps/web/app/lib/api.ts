@@ -42,6 +42,11 @@ export const routes = {
     portfolioSummary: "/ai/portfolio-summary",
     chat: "/ai/chat",
   },
+  notifications: {
+    preferences: "/notifications/preferences",
+    test: "/notifications/test",
+    logs: "/notifications/logs",
+  },
 } as const;
 
 export const api = axios.create({
