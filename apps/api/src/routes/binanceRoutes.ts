@@ -5,7 +5,7 @@ import {
     convertAssetHandler,
     fetchPermissions,
     transferAssetHandler
-} from "../controllers/accountController";
+} from "../controllers/accountController.js";
 
 
 const router = Router();
